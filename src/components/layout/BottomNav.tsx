@@ -6,6 +6,7 @@ type Item = { to: string; label: string; roles?: Ruolo[] };
 
 const items: Item[] = [
   { to: '/', label: 'Home' },
+  { to: '/live', label: 'Live' },
   { to: '/admin', label: 'Admin', roles: ['admin'] },
   { to: '/editor', label: 'Editor', roles: ['admin', 'editor'] },
   { to: '/dashboard', label: 'Dashboard' },

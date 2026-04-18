@@ -23,6 +23,8 @@ import type {
   PreferenzaCandidatoRow, PreferenzaCandidatoInsert, PreferenzaCandidatoUpdate,
   AuditLogRow,
   FotoSezioneRow, FotoSezioneInsert, FotoSezioneUpdate,
+  LivePostRow, LivePostInsert, LivePostUpdate,
+  LiveTypingRow, LiveTypingInsert,
 } from '@/lib/database.types';
 
 type WithRelationships<T extends { Row: object; Insert: object; Update: object }> = T & {
@@ -45,6 +47,8 @@ type DatabaseWithRel = {
       preferenze_candidato: WithRelationships<{ Row: PreferenzaCandidatoRow; Insert: PreferenzaCandidatoInsert; Update: PreferenzaCandidatoUpdate }>;
       audit_log: WithRelationships<{ Row: AuditLogRow; Insert: Omit<AuditLogRow, 'id' | 'created_at'>; Update: Partial<Omit<AuditLogRow, 'id'>> }>;
       foto_sezione: WithRelationships<{ Row: FotoSezioneRow; Insert: FotoSezioneInsert; Update: FotoSezioneUpdate }>;
+      live_post: WithRelationships<{ Row: LivePostRow; Insert: LivePostInsert; Update: LivePostUpdate }>;
+      live_typing: WithRelationships<{ Row: LiveTypingRow; Insert: LiveTypingInsert; Update: Partial<LiveTypingInsert> }>;
     };
     Views: Database['elemanager']['Views'];
     Functions: Database['elemanager']['Functions'];
