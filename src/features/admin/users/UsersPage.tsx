@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import {
   Button,
   ConfirmDialog,
+  EmptyState,
   PageHeader,
+  SkeletonCard,
   useToast,
 } from '@/components/ui';
 import {
@@ -99,7 +101,11 @@ export function UsersPage() {
       />
 
       {isLoading && (
-        <div className="glass p-6 text-slate-400">Caricamento…</div>
+        <div className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       )}
 
       {isError && !isLoading && (
@@ -110,10 +116,10 @@ export function UsersPage() {
       )}
 
       {!isLoading && !isError && list.length === 0 && (
-        <div className="glass p-6 flex flex-col items-start gap-3">
-          <p className="text-slate-300">Nessun profilo ancora. Crea il primo.</p>
-          <Button onClick={openCreate}>+ Nuovo profilo</Button>
-        </div>
+        <EmptyState
+          title="Nessun profilo"
+          description="Crea il primo profilo con il bottone in alto."
+        />
       )}
 
       {!isLoading && !isError && list.length > 0 && (

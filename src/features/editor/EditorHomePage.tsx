@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { PageHeader } from '@/components/ui';
+import { EmptyState, PageHeader, SkeletonCard } from '@/components/ui';
 import { useGiornate } from '@/lib/queries/giornate';
 import type { GiornataRow } from '@/lib/database.types';
 
@@ -32,7 +32,10 @@ export function EditorHomePage() {
       />
 
       {isLoading && (
-        <div className="glass p-6 text-slate-400">Caricamento…</div>
+        <div className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       )}
 
       {isError && !isLoading && (
@@ -43,9 +46,10 @@ export function EditorHomePage() {
       )}
 
       {!isLoading && !isError && openGiornate.length === 0 && (
-        <div className="glass p-6 text-slate-300">
-          Nessuna giornata aperta. Attendi che l'admin ne apra una.
-        </div>
+        <EmptyState
+          title="Nessuna giornata aperta"
+          description="Attendi che l'admin apra una giornata per iniziare."
+        />
       )}
 
       {!isLoading && !isError && openGiornate.length > 0 && (

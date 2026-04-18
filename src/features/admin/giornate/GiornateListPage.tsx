@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import {
   Button,
   ConfirmDialog,
+  EmptyState,
   PageHeader,
+  SkeletonCard,
   useToast,
 } from '@/components/ui';
 import {
@@ -94,7 +96,10 @@ export function GiornateListPage() {
       />
 
       {isLoading && (
-        <div className="glass p-6 text-slate-400">Caricamento…</div>
+        <div className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       )}
 
       {isError && !isLoading && (
@@ -105,9 +110,10 @@ export function GiornateListPage() {
       )}
 
       {!isLoading && !isError && list.length === 0 && (
-        <div className="glass p-6 text-slate-300">
-          Nessuna giornata ancora. Crea la prima.
-        </div>
+        <EmptyState
+          title="Nessuna giornata elettorale"
+          description="Crea la prima giornata con il bottone in alto."
+        />
       )}
 
       {!isLoading && !isError && list.length > 0 && (

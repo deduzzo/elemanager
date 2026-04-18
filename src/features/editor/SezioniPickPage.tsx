@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { Button, PageHeader } from '@/components/ui';
+import { Button, EmptyState, PageHeader, SkeletonCard } from '@/components/ui';
 import { useGiornata } from '@/lib/queries/giornate';
 import { useSezioniByGiornata } from '@/lib/queries/sezioni';
 import { useElezioniByGiornata } from '@/lib/queries/elezioni';
@@ -170,7 +170,13 @@ export function SezioniPickPage() {
     return (
       <div>
         <BackLink />
-        <div className="glass p-6 text-slate-400">Caricamento…</div>
+        <div className="flex flex-col gap-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
@@ -230,9 +236,10 @@ export function SezioniPickPage() {
       )}
 
       {sezioni.length === 0 ? (
-        <div className="glass p-6 text-slate-300">
-          Nessuna sezione in questa giornata. Admin deve importare il CSV.
-        </div>
+        <EmptyState
+          title="Nessuna sezione"
+          description="L'admin deve importare il CSV delle sezioni."
+        />
       ) : (
         <>
           <div className="mb-4">
