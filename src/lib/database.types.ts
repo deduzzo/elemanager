@@ -126,6 +126,58 @@ export type FotoSezioneInsert = {
 };
 export type FotoSezioneUpdate = Partial<Pick<FotoSezioneRow, 'descrizione' | 'elezione_id'>>;
 
+export type LivePostKind =
+  | 'user_text'
+  | 'user_audio'
+  | 'user_photo'
+  | 'system_vote_update'
+  | 'system_photo_added'
+  | 'system_section_complete'
+  | 'system_giornata_update'
+  | 'system_custom';
+
+export type LivePostRow = {
+  id: string;
+  giornata_id: string;
+  kind: LivePostKind;
+  author_id: string | null;
+  author_nome: string | null;
+  content: string | null;
+  media_path: string | null;
+  media_mime: string | null;
+  media_duration: number | null;
+  ref_table: string | null;
+  ref_id: string | null;
+  ref_url: string | null;
+  metadata: Record<string, unknown> | null;
+  moderated: boolean;
+  created_at: string;
+};
+export type LivePostInsert = {
+  giornata_id: string;
+  kind: LivePostKind;
+  author_id?: string | null;
+  author_nome?: string | null;
+  content?: string | null;
+  media_path?: string | null;
+  media_mime?: string | null;
+  media_duration?: number | null;
+  ref_table?: string | null;
+  ref_id?: string | null;
+  ref_url?: string | null;
+  metadata?: Record<string, unknown> | null;
+  moderated?: boolean;
+};
+export type LivePostUpdate = Partial<Pick<LivePostRow, 'content' | 'moderated'>>;
+
+export type LiveTypingRow = {
+  giornata_id: string;
+  user_id: string;
+  nome: string;
+  started_at: string;
+};
+export type LiveTypingInsert = LiveTypingRow;
+
 type WithDefaults<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export type ProfileInsert = WithDefaults<ProfileRow, 'attivo' | 'created_at'>;
@@ -196,6 +248,8 @@ export type Database = {
         Update: Partial<Omit<AuditLogRow, 'id'>>;
       };
       foto_sezione: { Row: FotoSezioneRow; Insert: FotoSezioneInsert; Update: FotoSezioneUpdate };
+      live_post: { Row: LivePostRow; Insert: LivePostInsert; Update: LivePostUpdate };
+      live_typing: { Row: LiveTypingRow; Insert: LiveTypingInsert; Update: Partial<LiveTypingInsert> };
     };
     Views: Record<string, never>;
     Functions: {
