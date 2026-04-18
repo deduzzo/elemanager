@@ -22,6 +22,7 @@ import type {
   SezioneRow,
 } from '@/lib/database.types';
 import { clearAutosave, readAutosave, useAutosave } from './useAutosave';
+import { PhotoGallery } from '@/components/photos/PhotoGallery';
 
 type Totali = {
   schede_totali: number | null;
@@ -458,6 +459,16 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
           />
         ))}
       </section>
+
+      {/* Foto pannello */}
+      <div className="glass p-4 space-y-3 rounded-2xl">
+        <h3 className="text-sm font-semibold text-slate-200">Foto pannello</h3>
+        <PhotoGallery
+          giornataId={sezione.giornata_id}
+          sezioneId={sezione.id}
+          elezioneId={elezione.id}
+        />
+      </div>
 
       {/* Sticky bottom bar */}
       <div className="sticky bottom-0 glass border-t border-white/10 p-3 flex gap-2 -mx-4 px-4">

@@ -102,6 +102,30 @@ export type AuditLogRow = {
   created_at: string;
 };
 
+export type FotoSezioneRow = {
+  id: string;
+  sezione_id: string;
+  elezione_id: string | null;
+  storage_path: string;
+  descrizione: string | null;
+  width: number | null;
+  height: number | null;
+  bytes: number | null;
+  uploaded_by: string | null;
+  created_at: string;
+};
+export type FotoSezioneInsert = {
+  sezione_id: string;
+  elezione_id?: string | null;
+  storage_path: string;
+  descrizione?: string | null;
+  width?: number | null;
+  height?: number | null;
+  bytes?: number | null;
+  uploaded_by?: string | null;
+};
+export type FotoSezioneUpdate = Partial<Pick<FotoSezioneRow, 'descrizione' | 'elezione_id'>>;
+
 type WithDefaults<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export type ProfileInsert = WithDefaults<ProfileRow, 'attivo' | 'created_at'>;
@@ -171,6 +195,7 @@ export type Database = {
         Insert: Omit<AuditLogRow, 'id' | 'created_at'>;
         Update: Partial<Omit<AuditLogRow, 'id'>>;
       };
+      foto_sezione: { Row: FotoSezioneRow; Insert: FotoSezioneInsert; Update: FotoSezioneUpdate };
     };
     Views: Record<string, never>;
     Functions: {
