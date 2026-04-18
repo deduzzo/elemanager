@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-bg-deep text-slate-100 antialiased;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(34,211,238,0.08), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(167,139,250,0.08), transparent 40%);
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl;
+  }
+  .glass-strong {
+    @apply bg-white/10 backdrop-blur-lg border border-white/15 rounded-2xl;
+  }
+  .btn-neon {
+    @apply px-4 py-2 rounded-xl font-medium transition-all duration-200
+           bg-gradient-neon text-white shadow-glow-cyan
+           hover:brightness-110 active:scale-[0.98] disabled:opacity-50;
+  }
+}
