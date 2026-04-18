@@ -6,18 +6,25 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Papa from 'papaparse';
 
 function parseCsv(text) {
-  const lines = text.trim().split(/\r?\n/);
-  const headers = lines[0].split(',').map((h) => h.trim());
-  return lines.slice(1).map((line) => {
-    const values = line.split(',');
-    const row = {};
-    headers.forEach((h, i) => {
-      const v = (values[i] ?? '').trim();
-      row[h] = v === '' ? null : v;
-    });
-    return row;
+  const result = Papa.parse(text.replace(/^\uFEFF/, ''), {
+    header: true,
+    skipEmptyLines: true,
+    dynamicTyping: false,
+    transformHeader: (h) => h.trim(),
+  });
+  if (result.errors?.length) {
+    console.warn(`CSV warnings: ${result.errors.length} (continuing with best-effort parse)`);
+  }
+  return result.data.map((row) => {
+    const cleaned = {};
+    for (const [k, v] of Object.entries(row)) {
+      const s = typeof v === 'string' ? v.trim() : v;
+      cleaned[k] = s === '' || s == null ? null : s;
+    }
+    return cleaned;
   });
 }
 
