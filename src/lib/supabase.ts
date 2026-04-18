@@ -8,4 +8,7 @@ export const supabase = createClient<Database>(env.supabaseUrl, env.supabaseAnon
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
+  db: {
+    schema: 'elemanager',
+  },
 });

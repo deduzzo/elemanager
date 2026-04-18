@@ -147,7 +147,7 @@ export type PreferenzaCandidatoInsert = WithDefaults<PreferenzaCandidatoRow, 'id
 export type PreferenzaCandidatoUpdate = Partial<Omit<PreferenzaCandidatoRow, 'id'>>;
 
 export type Database = {
-  public: {
+  elemanager: {
     Tables: {
       profiles: { Row: ProfileRow; Insert: ProfileInsert; Update: ProfileUpdate };
       giornate_elettorali: { Row: GiornataRow; Insert: GiornataInsert; Update: GiornataUpdate };
