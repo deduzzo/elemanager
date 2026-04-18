@@ -18,6 +18,18 @@ Web app PWA mobile-first per la raccolta **ufficiosa** dei risultati elettorali,
 - **Editor** — inserisce voti reali per sezione (modifica solo i propri, admin sovrascrive)
 - **Viewer** — dashboard aggregati, niente voti presunti
 
+## Setup locale
+
+1. `cp .env.example .env.local` e compila `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` con i valori della tua istanza Supabase self-hosted.
+2. `npm install`
+3. Applica le migrazioni al database:
+   - **Automatico** (se hai `.env.server` con `SUPABASE_SERVICE_ROLE_KEY`): `node scripts/apply-migration.mjs supabase/migrations/`
+   - **Manuale**: copia/incolla i file `supabase/migrations/000*.sql` nel SQL Editor di Supabase Studio in ordine.
+4. Crea un utente in Supabase Studio → Authentication → Users → Add user (email + password).
+5. Nel SQL Editor, esegui `scripts/create_admin.sql` sostituendo l'UUID con quello dell'utente appena creato.
+6. (Opzionale) Applica il seed demo: `supabase/seed.sql` via SQL Editor.
+7. `npm run dev` e visita http://localhost:5173
+
 ## Stato
 
 🚧 Fase 1 (MVP core) — in sviluppo.
