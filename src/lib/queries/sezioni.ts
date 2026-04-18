@@ -5,6 +5,20 @@ import { useRealtimeTable } from './useRealtimeTable';
 
 const KEY = 'sezioni';
 
+/**
+ * Postgres numeric(9,6) is serialized as string by PostgREST. Coerce lat/lng
+ * (and circoscrizione int) at the query boundary so downstream TS code can
+ * trust the declared types.
+ */
+function coerceSezione(r: SezioneRow): SezioneRow {
+  return {
+    ...r,
+    lat: r.lat == null ? null : Number(r.lat),
+    lng: r.lng == null ? null : Number(r.lng),
+    circoscrizione: r.circoscrizione == null ? null : Number(r.circoscrizione),
+  };
+}
+
 export function useSezioniByGiornata(giornataId: string | undefined) {
   useRealtimeTable({ table: 'sezioni', invalidate: [[KEY, giornataId]], enabled: !!giornataId });
   return useQuery({
@@ -17,7 +31,7 @@ export function useSezioniByGiornata(giornataId: string | undefined) {
         .eq('giornata_id', giornataId as string)
         .order('numero', { ascending: true });
       if (error) throw error;
-      return (data ?? []) as SezioneRow[];
+      return (data ?? []).map((r) => coerceSezione(r as SezioneRow));
     },
   });
 }
@@ -32,7 +46,7 @@ export function useCreateSezione() {
         .select()
         .single();
       if (error) throw error;
-      return data as SezioneRow;
+      return coerceSezione(data as SezioneRow);
     },
     onSuccess: (_data, input) =>
       qc.invalidateQueries({ queryKey: [KEY, input.giornata_id] }),
@@ -50,7 +64,7 @@ export function useUpdateSezione() {
         .select()
         .single();
       if (error) throw error;
-      return data as SezioneRow;
+      return coerceSezione(data as SezioneRow);
     },
     onSuccess: (_data) => qc.invalidateQueries({ queryKey: [KEY] }),
   });
@@ -83,7 +97,7 @@ export function useBulkUpsertSezioni() {
         .upsert(payload, { onConflict: 'giornata_id,numero' })
         .select();
       if (error) throw error;
-      return (data ?? []) as SezioneRow[];
+      return (data ?? []).map((r) => coerceSezione(r as SezioneRow));
     },
     onSuccess: (_data, { giornataId }) =>
       qc.invalidateQueries({ queryKey: [KEY, giornataId] }),
