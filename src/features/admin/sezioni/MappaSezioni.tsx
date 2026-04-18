@@ -1,14 +1,14 @@
 import './leaflet-icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CircleMarker,
   MapContainer,
   Marker,
   Popup,
   TileLayer,
-  useMap,
 } from 'react-leaflet';
-import type { LatLngExpression } from 'leaflet';
+import type { Map as LeafletMap, LatLngBoundsExpression } from 'leaflet';
+import L from 'leaflet';
 import { Button, useToast } from '@/components/ui';
 import type { SezioneRow } from '@/lib/database.types';
 
@@ -27,87 +27,89 @@ function haversineKm(a: [number, number], b: [number, number]) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+type SezioneGeo = SezioneRow & { lat: number; lng: number };
+
 interface MappaSezioniProps {
   sezioni: SezioneRow[];
 }
 
 interface SezioneConDistanza {
-  sezione: SezioneRow;
+  sezione: SezioneGeo;
   distanzaKm: number;
-}
-
-/**
- * Componente interno che aggiorna centro/zoom della mappa quando cambia la
- * posizione utente. Usa useMap() che funziona solo dentro <MapContainer>.
- */
-function FlyToUser({ pos }: { pos: [number, number] | null }) {
-  const map = useMap();
-  if (pos) {
-    map.setView(pos, 15);
-  }
-  return null;
 }
 
 export function MappaSezioni({ sezioni }: MappaSezioniProps) {
   const { push } = useToast();
+  const mapRef = useRef<LeafletMap | null>(null);
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [vicine, setVicine] = useState<SezioneConDistanza[]>([]);
   const [loadingGeo, setLoadingGeo] = useState(false);
 
-  const sezioniConCoord = useMemo(
-    () =>
-      sezioni.filter(
-        (s): s is SezioneRow & { lat: number; lng: number } =>
-          s.lat !== null && s.lng !== null,
-      ),
-    [sezioni],
-  );
+  const sezioniGeo = useMemo<SezioneGeo[]>(() => {
+    return sezioni
+      .map((s) => ({
+        ...s,
+        lat: s.lat == null ? NaN : Number(s.lat),
+        lng: s.lng == null ? NaN : Number(s.lng),
+      }))
+      .filter(
+        (s): s is SezioneGeo =>
+          Number.isFinite(s.lat) && Number.isFinite(s.lng),
+      );
+  }, [sezioni]);
 
-  const center: LatLngExpression = useMemo(() => {
-    if (sezioniConCoord.length === 0) return MESSINA_CENTER;
-    const avgLat =
-      sezioniConCoord.reduce((acc, s) => acc + s.lat, 0) /
-      sezioniConCoord.length;
-    const avgLng =
-      sezioniConCoord.reduce((acc, s) => acc + s.lng, 0) /
-      sezioniConCoord.length;
-    return [avgLat, avgLng];
-  }, [sezioniConCoord]);
+  // Ogni volta che cambiano i marker, inquadra la mappa sui bounds reali.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (sezioniGeo.length === 0) {
+      map.setView(MESSINA_CENTER, 12);
+      return;
+    }
+    const bounds: LatLngBoundsExpression = sezioniGeo.map((s) => [s.lat, s.lng]);
+    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 15 });
+  }, [sezioniGeo]);
+
+  // Se l'utente clicca "Trova vicine", centra sulla sua posizione a zoom stretto.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (map && userPos) {
+      map.setView(userPos, 15);
+    }
+  }, [userPos]);
 
   const handleTrovaVicine = () => {
     if (!('geolocation' in navigator)) {
       push('Geolocalizzazione non supportata dal browser', { type: 'error' });
       return;
     }
-    if (sezioniConCoord.length === 0) {
+    if (sezioniGeo.length === 0) {
       push('Nessuna sezione con coordinate valide', { type: 'error' });
       return;
     }
     setLoadingGeo(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const userCoords: [number, number] = [
-          pos.coords.latitude,
-          pos.coords.longitude,
-        ];
-        setUserPos(userCoords);
-        const conDist = sezioniConCoord
+        const me: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setUserPos(me);
+        const top = sezioniGeo
           .map<SezioneConDistanza>((s) => ({
             sezione: s,
-            distanzaKm: haversineKm(userCoords, [s.lat, s.lng]),
+            distanzaKm: haversineKm(me, [s.lat, s.lng]),
           }))
           .sort((a, b) => a.distanzaKm - b.distanzaKm)
           .slice(0, 5);
-        setVicine(conDist);
+        setVicine(top);
         setLoadingGeo(false);
       },
       (err) => {
         setLoadingGeo(false);
-        if (err.code === err.PERMISSION_DENIED) {
-          push('Permesso geolocalizzazione negato', { type: 'error' });
-        } else {
-          push('Errore di geolocalizzazione', { type: 'error' });
-        }
+        push(
+          err.code === err.PERMISSION_DENIED
+            ? 'Permesso geolocalizzazione negato'
+            : 'Errore di geolocalizzazione',
+          { type: 'error' },
+        );
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
     );
@@ -117,7 +119,7 @@ export function MappaSezioni({ sezioni }: MappaSezioniProps) {
     <div className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm text-slate-400">
-          {sezioniConCoord.length} sezioni geolocalizzate su {sezioni.length}
+          {sezioniGeo.length} sezioni geolocalizzate su {sezioni.length}
         </div>
         <Button
           variant="ghost"
@@ -130,16 +132,19 @@ export function MappaSezioni({ sezioni }: MappaSezioniProps) {
       </div>
 
       <MapContainer
-        center={center}
+        center={MESSINA_CENTER}
         zoom={12}
         style={{ height: '480px' }}
         className="rounded-2xl overflow-hidden"
+        ref={(instance) => {
+          if (instance) mapRef.current = instance as unknown as LeafletMap;
+        }}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
         />
-        {sezioniConCoord.map((s) => (
+        {sezioniGeo.map((s) => (
           <Marker key={s.id} position={[s.lat, s.lng]}>
             <Popup>
               <strong>Sezione {s.numero}</strong>
@@ -165,7 +170,6 @@ export function MappaSezioni({ sezioni }: MappaSezioniProps) {
             <Popup>La tua posizione</Popup>
           </CircleMarker>
         )}
-        <FlyToUser pos={userPos} />
       </MapContainer>
 
       {vicine.length > 0 && (
@@ -194,3 +198,6 @@ export function MappaSezioni({ sezioni }: MappaSezioniProps) {
     </div>
   );
 }
+
+// Silence lint: L import kept for future use (e.g., custom icons)
+void L;
