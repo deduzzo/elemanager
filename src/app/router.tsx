@@ -14,6 +14,7 @@ import { AuditLogPage } from '@/features/admin/audit/AuditLogPage';
 import { EditorHomePage } from '@/features/editor/EditorHomePage';
 import { SezioniPickPage } from '@/features/editor/SezioniPickPage';
 import { VoteEntryPage } from '@/features/editor/VoteEntryPage';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
 
 export function AppRouter() {
   return (
@@ -51,6 +52,7 @@ export function AppRouter() {
             element={<VoteEntryPage />}
           />
         </Route>
+        <Route path="dashboard" element={<DashboardPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
