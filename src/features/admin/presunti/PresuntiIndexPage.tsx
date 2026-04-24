@@ -100,6 +100,7 @@ export function PresuntiIndexPage() {
 function PerCandidatoTable({ elezioneId }: { elezioneId: string }) {
   const { data: liste = [] } = useListeByElezione(elezioneId);
   const { data: presunti = [], isLoading } = useVotiPresuntiByElezione(elezioneId);
+  const [q, setQ] = useState('');
 
   const candidatiAll = useAllCandidatiByListe(liste.map((l) => l.id));
 
@@ -121,45 +122,62 @@ function PerCandidatoTable({ elezioneId }: { elezioneId: string }) {
     });
   }, [candidatiAll, liste, presunti]);
 
+  const filtered = q
+    ? rows.filter((r) =>
+        `${r.cognome} ${r.nome}`.toLowerCase().includes(q.trim().toLowerCase())
+      )
+    : rows;
+
   if (isLoading) return <Skeleton className="h-40" />;
   if (rows.length === 0)
     return <div className="glass p-6 rounded-2xl text-slate-300">Nessun candidato.</div>;
 
   return (
-    <div className="glass rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-left text-slate-400">
-          <tr>
-            <th className="px-4 py-2">Candidato</th>
-            <th className="px-4 py-2">Lista</th>
-            <th className="px-4 py-2 text-right">Totale presunto</th>
-            <th className="px-4 py-2 text-right"># stime sezione</th>
-            <th className="px-4 py-2" />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
-              <td className="px-4 py-2">
-                {r.cognome} {r.nome}
-              </td>
-              <td className="px-4 py-2 text-slate-300">{r.listaNome}</td>
-              <td className="px-4 py-2 text-right">
-                {r.totale === null ? <span className="text-slate-500">—</span> : r.totale}
-              </td>
-              <td className="px-4 py-2 text-right">{r.numStime}</td>
-              <td className="px-4 py-2 text-right">
-                <Link
-                  to={`/admin/presunti/candidato/${r.id}`}
-                  className="text-neon-cyan hover:underline"
-                >
-                  Modifica →
-                </Link>
-              </td>
+    <div className="space-y-3">
+      <div className="glass p-2 rounded-2xl">
+        <input
+          type="search"
+          placeholder="Cerca candidato (nome o cognome)"
+          className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
+      <div className="glass rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-slate-400">
+            <tr>
+              <th className="px-4 py-2">Candidato</th>
+              <th className="px-4 py-2">Lista</th>
+              <th className="px-4 py-2 text-right">Totale presunto</th>
+              <th className="px-4 py-2 text-right"># stime sezione</th>
+              <th className="px-4 py-2" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <td className="px-4 py-2">
+                  {r.cognome} {r.nome}
+                </td>
+                <td className="px-4 py-2 text-slate-300">{r.listaNome}</td>
+                <td className="px-4 py-2 text-right">
+                  {r.totale === null ? <span className="text-slate-500">—</span> : r.totale}
+                </td>
+                <td className="px-4 py-2 text-right">{r.numStime}</td>
+                <td className="px-4 py-2 text-right">
+                  <Link
+                    to={`/admin/presunti/candidato/${r.id}`}
+                    className="text-neon-cyan hover:underline"
+                  >
+                    Modifica →
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -173,6 +191,7 @@ function PerSezioneTable({
 }) {
   const { data: sezioni = [], isLoading } = useSezioniByGiornata(giornataId);
   const { data: presunti = [] } = useVotiPresuntiByElezione(elezioneId);
+  const [q, setQ] = useState('');
 
   const rows = useMemo(() => {
     const countBySez = new Map<string, number>();
@@ -191,41 +210,55 @@ function PerSezioneTable({
       }));
   }, [sezioni, presunti]);
 
+  const filtered = q ? rows.filter((r) => String(r.numero).includes(q.trim())) : rows;
+
   if (isLoading) return <Skeleton className="h-40" />;
   if (rows.length === 0)
     return <div className="glass p-6 rounded-2xl text-slate-300">Nessuna sezione.</div>;
 
   return (
-    <div className="glass rounded-2xl overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="text-left text-slate-400">
-          <tr>
-            <th className="px-4 py-2">Sezione</th>
-            <th className="px-4 py-2">Indirizzo</th>
-            <th className="px-4 py-2 text-right"># candidati con stima</th>
-            <th className="px-4 py-2 text-right">Totale voti presunti</th>
-            <th className="px-4 py-2" />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
-              <td className="px-4 py-2">Sez. {r.numero}</td>
-              <td className="px-4 py-2 text-slate-300">{r.indirizzo ?? '—'}</td>
-              <td className="px-4 py-2 text-right">{r.numCandStimati}</td>
-              <td className="px-4 py-2 text-right">{r.totale}</td>
-              <td className="px-4 py-2 text-right">
-                <Link
-                  to={`/admin/presunti/sezione/${r.id}`}
-                  className="text-neon-cyan hover:underline"
-                >
-                  Modifica →
-                </Link>
-              </td>
+    <div className="space-y-3">
+      <div className="glass p-2 rounded-2xl">
+        <input
+          type="search"
+          inputMode="numeric"
+          placeholder="Cerca sezione per numero"
+          className="w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
+      </div>
+      <div className="glass rounded-2xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="text-left text-slate-400">
+            <tr>
+              <th className="px-4 py-2">Sezione</th>
+              <th className="px-4 py-2">Indirizzo</th>
+              <th className="px-4 py-2 text-right"># candidati con stima</th>
+              <th className="px-4 py-2 text-right">Totale voti presunti</th>
+              <th className="px-4 py-2" />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filtered.map((r) => (
+              <tr key={r.id} className="border-t border-white/5 hover:bg-white/5">
+                <td className="px-4 py-2">Sez. {r.numero}</td>
+                <td className="px-4 py-2 text-slate-300">{r.indirizzo ?? '—'}</td>
+                <td className="px-4 py-2 text-right">{r.numCandStimati}</td>
+                <td className="px-4 py-2 text-right">{r.totale}</td>
+                <td className="px-4 py-2 text-right">
+                  <Link
+                    to={`/admin/presunti/sezione/${r.id}`}
+                    className="text-neon-cyan hover:underline"
+                  >
+                    Modifica →
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
