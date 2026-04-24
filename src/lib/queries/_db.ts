@@ -21,6 +21,7 @@ import type {
   RisultatoSezioneRow, RisultatoSezioneInsert, RisultatoSezioneUpdate,
   VotoListaRow, VotoListaInsert, VotoListaUpdate,
   PreferenzaCandidatoRow, PreferenzaCandidatoInsert, PreferenzaCandidatoUpdate,
+  VotoPresuntoRow, VotoPresuntoInsert, VotoPresuntoUpdate,
   AuditLogRow,
   FotoSezioneRow, FotoSezioneInsert, FotoSezioneUpdate,
   LivePostRow, LivePostInsert, LivePostUpdate,
@@ -45,6 +46,7 @@ type DatabaseWithRel = {
       risultati_sezione: WithRelationships<{ Row: RisultatoSezioneRow; Insert: RisultatoSezioneInsert; Update: RisultatoSezioneUpdate }>;
       voti_lista: WithRelationships<{ Row: VotoListaRow; Insert: VotoListaInsert; Update: VotoListaUpdate }>;
       preferenze_candidato: WithRelationships<{ Row: PreferenzaCandidatoRow; Insert: PreferenzaCandidatoInsert; Update: PreferenzaCandidatoUpdate }>;
+      voti_presunti: WithRelationships<{ Row: VotoPresuntoRow; Insert: VotoPresuntoInsert; Update: VotoPresuntoUpdate }>;
       audit_log: WithRelationships<{ Row: AuditLogRow; Insert: Omit<AuditLogRow, 'id' | 'created_at'>; Update: Partial<Omit<AuditLogRow, 'id'>> }>;
       foto_sezione: WithRelationships<{ Row: FotoSezioneRow; Insert: FotoSezioneInsert; Update: FotoSezioneUpdate }>;
       live_post: WithRelationships<{ Row: LivePostRow; Insert: LivePostInsert; Update: LivePostUpdate }>;

@@ -91,6 +91,28 @@ export type PreferenzaCandidatoRow = {
   voti: number;
 };
 
+export type VotoPresuntoRow = {
+  id: string;
+  candidato_id: string;
+  sezione_id: string | null;
+  voti: number;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type VotoPresuntoInsert = Omit<
+  VotoPresuntoRow,
+  'id' | 'created_at' | 'updated_at'
+> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type VotoPresuntoUpdate = Partial<Omit<VotoPresuntoRow, 'id'>>;
+
 export type AuditLogRow = {
   id: number;
   actor_id: string | null;
@@ -241,6 +263,11 @@ export type Database = {
         Row: PreferenzaCandidatoRow;
         Insert: PreferenzaCandidatoInsert;
         Update: PreferenzaCandidatoUpdate;
+      };
+      voti_presunti: {
+        Row: VotoPresuntoRow;
+        Insert: VotoPresuntoInsert;
+        Update: VotoPresuntoUpdate;
       };
       audit_log: {
         Row: AuditLogRow;
