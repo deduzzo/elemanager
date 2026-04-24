@@ -30,6 +30,14 @@ Web app PWA mobile-first per la raccolta **ufficiosa** dei risultati elettorali,
 6. (Opzionale) Applica il seed demo: `supabase/seed.sql` via SQL Editor.
 7. `npm run dev` e visita http://localhost:5173
 
+## Fase 3 — Voti presunti + Confronto (admin-only)
+
+- Admin inserisce stime voti per candidato: totale globale + stime per-sezione opzionali.
+- Due viste di inserimento simmetriche (per candidato / per sezione) con autosave on blur.
+- Dashboard `/admin/confronto` con scostamenti live (reale vs presunto) a due tab.
+- Tutte le stime sono RLS admin-only: editor/viewer non vedono nulla.
+- Migration: `supabase/migrations/0010_voti_presunti.sql`.
+
 ## Stato
 
 🚧 Fase 1 (MVP core) — in sviluppo.
