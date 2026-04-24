@@ -49,12 +49,12 @@ function useCandContext(candidatoId: string | undefined) {
 function useRisultatiAndPrefsByElezione(elezioneId: string | undefined) {
   useRealtimeTable({
     table: 'risultati_sezione',
-    invalidate: [['risultati_by_elezione', elezioneId]],
+    invalidate: [['drill_candidato_bundle', elezioneId]],
     enabled: !!elezioneId,
   });
   useRealtimeTable({
     table: 'preferenze_candidato',
-    invalidate: [['preferenze_by_elezione', elezioneId]],
+    invalidate: [['drill_candidato_bundle', elezioneId]],
     enabled: !!elezioneId,
   });
   return useQuery({
