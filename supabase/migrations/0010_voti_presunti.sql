@@ -34,7 +34,8 @@ CREATE INDEX IF NOT EXISTS voti_presunti_sezione_idx
 -- Trigger coerenza giornata: la sezione_id.giornata_id deve coincidere con
 -- candidato_id → lista → elezione → giornata_id.
 CREATE OR REPLACE FUNCTION elemanager.trg_voti_presunti_coerenza_giornata()
-RETURNS trigger LANGUAGE plpgsql AS $$
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = elemanager, auth AS $$
 DECLARE
   giornata_candidato uuid;
   giornata_sezione uuid;
@@ -115,5 +116,7 @@ END
 $$;
 
 ALTER TABLE elemanager.voti_presunti REPLICA IDENTITY FULL;
+
+GRANT ALL ON elemanager.voti_presunti TO anon, authenticated, service_role;
 
 COMMIT;
