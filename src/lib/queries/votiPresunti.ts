@@ -79,10 +79,25 @@ export function useVotiPresuntiBySezione(
     queryKey: [KEY, 'sezione', sezioneId, elezioneId],
     enabled,
     queryFn: async (): Promise<VotoPresuntoRow[]> => {
+      const { data: liste, error: eL } = await db
+        .from('liste')
+        .select('id')
+        .eq('elezione_id', elezioneId as string);
+      if (eL) throw eL;
+      const listaIds = (liste ?? []).map((l) => l.id);
+      if (listaIds.length === 0) return [];
+      const { data: candidati, error: eC } = await db
+        .from('candidati')
+        .select('id')
+        .in('lista_id', listaIds);
+      if (eC) throw eC;
+      const candIds = (candidati ?? []).map((c) => c.id);
+      if (candIds.length === 0) return [];
       const { data, error } = await db
         .from('voti_presunti')
         .select('*')
-        .eq('sezione_id', sezioneId as string);
+        .eq('sezione_id', sezioneId as string)
+        .in('candidato_id', candIds);
       if (error) throw error;
       return (data ?? []) as VotoPresuntoRow[];
     },
@@ -94,12 +109,37 @@ export function useUpsertVotoPresunto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: VotoPresuntoInsert): Promise<VotoPresuntoRow> => {
-      const conflict = input.sezione_id
-        ? 'candidato_id,sezione_id'
-        : 'candidato_id';
+      if (input.sezione_id) {
+        // Caso per-sezione: upsert sull'indice composite parziale.
+        const { data, error } = await db
+          .from('voti_presunti')
+          .upsert(input, { onConflict: 'candidato_id,sezione_id', ignoreDuplicates: false })
+          .select()
+          .single();
+        if (error) throw error;
+        return data as VotoPresuntoRow;
+      }
+      // Caso totale globale (sezione_id IS NULL): SELECT esistente, poi INSERT o UPDATE.
+      const { data: existing, error: eSel } = await db
+        .from('voti_presunti')
+        .select('id')
+        .eq('candidato_id', input.candidato_id)
+        .is('sezione_id', null)
+        .maybeSingle();
+      if (eSel) throw eSel;
+      if (existing) {
+        const { data, error } = await db
+          .from('voti_presunti')
+          .update({ voti: input.voti })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data as VotoPresuntoRow;
+      }
       const { data, error } = await db
         .from('voti_presunti')
-        .upsert(input, { onConflict: conflict, ignoreDuplicates: false })
+        .insert(input)
         .select()
         .single();
       if (error) throw error;
