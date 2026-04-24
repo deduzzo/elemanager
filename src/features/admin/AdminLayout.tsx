@@ -5,6 +5,8 @@ const items = [
   { to: '/admin/users', label: 'Utenti' },
   { to: '/admin/giornate', label: 'Giornate' },
   { to: '/admin/sezioni', label: 'Sezioni' },
+  { to: '/admin/presunti', label: 'Presunti' },
+  { to: '/admin/confronto', label: 'Confronto' },
   { to: '/admin/audit', label: 'Audit' },
 ];
 
