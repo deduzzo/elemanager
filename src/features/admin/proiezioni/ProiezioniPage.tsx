@@ -17,12 +17,16 @@ import { SezioniMancantiList } from './components/SezioniMancantiList';
 import { MatriceCircoscrizioneListe } from './components/MatriceCircoscrizioneListe';
 import { ExportCsvButtons } from './components/ExportCsvButtons';
 
-const itTime = new Intl.DateTimeFormat('it-IT', {
-  hour: '2-digit',
-  minute: '2-digit',
-  day: '2-digit',
-  month: '2-digit',
-});
+function timeAgo(d: Date): string {
+  const seconds = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (seconds < 60) return 'pochi secondi fa';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minuto' : 'minuti'} fa`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? 'ora' : 'ore'} fa`;
+  const days = Math.floor(hours / 24);
+  return `${days} ${days === 1 ? 'giorno' : 'giorni'} fa`;
+}
 
 export function ProiezioniPage() {
   const { data: giornate = [] } = useGiornate();
@@ -107,7 +111,7 @@ export function ProiezioniPage() {
       new Date(b.updated_at) > new Date(a.updated_at) ? b : a,
     );
     return {
-      when: itTime.format(new Date(latest.updated_at)),
+      when: timeAgo(new Date(latest.updated_at)),
       who: latest.updated_by ?? '—',
     };
   }, [bundle.risultati, selectedElezioneId]);
