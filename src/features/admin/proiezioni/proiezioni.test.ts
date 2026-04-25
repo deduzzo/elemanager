@@ -4,7 +4,7 @@ import type {
   RisultatoSezioneRow,
   SezioneRow,
 } from '@/lib/database.types';
-import { proiezioneListe, type ProiezioneLista } from './proiezioni';
+import { proiezioneListe } from './proiezioni';
 import type { ListaRow, VotoListaRow } from '@/lib/database.types';
 import {
   proiezioneCandidati,
