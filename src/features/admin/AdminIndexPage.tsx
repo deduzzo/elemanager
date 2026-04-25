@@ -9,6 +9,7 @@ const cards: Card[] = [
   { to: '/admin/sezioni', title: 'Sezioni', description: 'Importa CSV dei seggi e visualizza sulla mappa.' },
   { to: '/admin/presunti', title: 'Voti presunti', description: 'Inserisci stime voti per candidato (totale e per sezione).' },
   { to: '/admin/confronto', title: 'Confronto', description: 'Dashboard scostamenti presunti vs reali in tempo reale.' },
+  { to: '/admin/proiezioni', title: 'Proiezioni', description: 'Stime di risultato basate sullo spoglio in corso.' },
   { to: '/admin/audit', title: 'Audit log', description: 'Storico modifiche voti e operazioni.' },
 ];
 
