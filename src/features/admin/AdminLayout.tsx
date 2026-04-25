@@ -7,6 +7,7 @@ const items = [
   { to: '/admin/sezioni', label: 'Sezioni' },
   { to: '/admin/presunti', label: 'Presunti' },
   { to: '/admin/confronto', label: 'Confronto' },
+  { to: '/admin/proiezioni', label: 'Proiezioni' },
   { to: '/admin/audit', label: 'Audit' },
 ];
 

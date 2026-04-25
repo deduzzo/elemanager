@@ -17,6 +17,7 @@ import { PresuntoSezionePage } from '@/features/admin/presunti/PresuntoSezionePa
 import { ConfrontoPage } from '@/features/admin/confronto/ConfrontoPage';
 import { CandidatoDrillDown } from '@/features/admin/confronto/CandidatoDrillDown';
 import { SezioneDrillDown } from '@/features/admin/confronto/SezioneDrillDown';
+import { ProiezioniPage } from '@/features/admin/proiezioni/ProiezioniPage';
 import { EditorHomePage } from '@/features/editor/EditorHomePage';
 import { SezioniPickPage } from '@/features/editor/SezioniPickPage';
 import { VoteEntryPage } from '@/features/editor/VoteEntryPage';
@@ -48,6 +49,7 @@ export function AppRouter() {
           <Route path="confronto" element={<ConfrontoPage />} />
           <Route path="confronto/candidato/:candidatoId" element={<CandidatoDrillDown />} />
           <Route path="confronto/sezione/:sezioneId" element={<SezioneDrillDown />} />
+          <Route path="proiezioni" element={<ProiezioniPage />} />
           <Route path="audit" element={<AuditLogPage />} />
         </Route>
         <Route

@@ -38,6 +38,14 @@ Web app PWA mobile-first per la raccolta **ufficiosa** dei risultati elettorali,
 - Tutte le stime sono RLS admin-only: editor/viewer non vedono nulla.
 - Migration: `supabase/migrations/0010_voti_presunti.sql`.
 
+## Fase 4 — Proiezioni statistiche (admin-only)
+
+- Pagina `/admin/proiezioni` con stima del risultato finale pesata per circoscrizione.
+- 6 widget: KPI copertura, bar chart liste con bande di confidenza, top candidati per preferenze proiettate, sezioni mancanti raggruppate per circoscrizione, matrice circoscrizione × lista, export CSV per liste/candidati/sezioni mancanti.
+- Algoritmo: per ogni circoscrizione la proiezione = voti × (totale/coperta); fallback alla media globale per circoscrizioni senza copertura.
+- Realtime: si aggiorna live quando un editor chiude una sezione.
+- Pure functions in `src/features/admin/proiezioni/proiezioni.ts` con 14+ unit test.
+
 ## Stato
 
 🚧 Fase 1 (MVP core) — in sviluppo.
