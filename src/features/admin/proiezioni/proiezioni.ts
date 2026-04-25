@@ -150,3 +150,189 @@ export function proiezioneListe(input: {
     };
   });
 }
+
+export type ProiezioneCandidato = {
+  candidato_id: string;
+  cognome: string;
+  nome: string;
+  lista_id: string;
+  voti_reali: number;
+  proiezione: number;
+  banda_min: number;
+  banda_max: number;
+};
+
+export function proiezioneCandidati(input: {
+  candidati: CandidatoRow[];
+  sezioni: SezioneRow[];
+  risultatiSezione: RisultatoSezioneRow[];
+  preferenze: PreferenzaCandidatoRow[];
+  elezioneId: string;
+}): ProiezioneCandidato[] {
+  const { candidati, sezioni, risultatiSezione, preferenze, elezioneId } = input;
+
+  // Riusiamo proiezioneListe trasformando candidati in liste virtuali
+  // e preferenze in voti_lista virtuali. Più pratico: replichiamo la logica.
+
+  const sezToCirc = new Map<string, number>();
+  for (const s of sezioni) sezToCirc.set(s.id, s.circoscrizione ?? 0);
+
+  const coperture = coperturePerCircoscrizione({ sezioni, risultatiSezione, elezioneId });
+
+  const rsValid = risultatiSezione.filter(
+    (r) => r.elezione_id === elezioneId && CONTA_STATI.has(r.stato),
+  );
+  const rsValidIds = new Set(rsValid.map((r) => r.id));
+
+  const rsIdToCirc = new Map<string, number>();
+  for (const r of rsValid) {
+    const c = sezToCirc.get(r.sezione_id);
+    if (c !== undefined) rsIdToCirc.set(r.id, c);
+  }
+
+  const prefPerCandCirc = new Map<string, Map<number, number>>();
+  const prefTotPerCirc = new Map<number, number>();
+  for (const p of preferenze) {
+    if (!rsValidIds.has(p.risultato_sezione_id)) continue;
+    const c = rsIdToCirc.get(p.risultato_sezione_id);
+    if (c === undefined) continue;
+    let m = prefPerCandCirc.get(p.candidato_id);
+    if (!m) {
+      m = new Map<number, number>();
+      prefPerCandCirc.set(p.candidato_id, m);
+    }
+    m.set(c, (m.get(c) ?? 0) + p.voti);
+    prefTotPerCirc.set(c, (prefTotPerCirc.get(c) ?? 0) + p.voti);
+  }
+
+  const coverageGlobale = coperture.reduce((a, c) => a + c.coverage, 0);
+
+  return candidati.map((c) => {
+    const perCirc = prefPerCandCirc.get(c.id) ?? new Map<number, number>();
+    const votiReali = Array.from(perCirc.values()).reduce((a, b) => a + b, 0);
+
+    let proiezione = 0;
+    const quote: number[] = [];
+    for (const cop of coperture) {
+      const v = perCirc.get(cop.circoscrizione) ?? 0;
+      if (cop.coverage > 0) {
+        proiezione += v * (cop.total / cop.coverage);
+        const totC = prefTotPerCirc.get(cop.circoscrizione) ?? 0;
+        if (totC > 0) quote.push(v / totC);
+      } else if (coverageGlobale > 0) {
+        proiezione += (votiReali / coverageGlobale) * cop.total;
+      }
+    }
+
+    const sigma = quote.length > 1 ? stddev(quote) : BANDA_DEFAULT_PCT;
+    const delta = proiezione * sigma;
+    return {
+      candidato_id: c.id,
+      cognome: c.cognome,
+      nome: c.nome,
+      lista_id: c.lista_id,
+      voti_reali: votiReali,
+      proiezione,
+      banda_min: Math.max(0, proiezione - delta),
+      banda_max: proiezione + delta,
+    };
+  });
+}
+
+export type SezioneMancante = {
+  sezione_id: string;
+  numero: number;
+  indirizzo: string | null;
+  ubicazione: string | null;
+  circoscrizione: number;
+  statoSezione: 'draft' | 'assente';
+};
+
+export function sezioniMancanti(input: {
+  sezioni: SezioneRow[];
+  risultatiSezione: RisultatoSezioneRow[];
+  elezioneId: string;
+}): SezioneMancante[] {
+  const { sezioni, risultatiSezione, elezioneId } = input;
+  const rsBySez = new Map<string, RisultatoSezioneRow>();
+  for (const r of risultatiSezione) {
+    if (r.elezione_id !== elezioneId) continue;
+    rsBySez.set(r.sezione_id, r);
+  }
+  const out: SezioneMancante[] = [];
+  for (const s of sezioni) {
+    const rs = rsBySez.get(s.id);
+    if (rs && CONTA_STATI.has(rs.stato)) continue;
+    out.push({
+      sezione_id: s.id,
+      numero: s.numero,
+      indirizzo: s.indirizzo,
+      ubicazione: s.ubicazione,
+      circoscrizione: s.circoscrizione ?? 0,
+      statoSezione: rs ? 'draft' : 'assente',
+    });
+  }
+  return out.sort((a, b) => a.circoscrizione - b.circoscrizione || a.numero - b.numero);
+}
+
+export type MatriceCella = {
+  lista_id: string;
+  voti_reali: number;
+  proiezione: number;
+};
+
+export type MatriceRow = {
+  circoscrizione: number;
+  coverage: number;
+  total: number;
+  celle: MatriceCella[];
+};
+
+export function matriceCircoscrizioneListe(input: {
+  liste: ListaRow[];
+  sezioni: SezioneRow[];
+  risultatiSezione: RisultatoSezioneRow[];
+  votiLista: VotoListaRow[];
+  elezioneId: string;
+}): MatriceRow[] {
+  const { liste, sezioni, risultatiSezione, votiLista, elezioneId } = input;
+
+  const sezToCirc = new Map<string, number>();
+  for (const s of sezioni) sezToCirc.set(s.id, s.circoscrizione ?? 0);
+
+  const coperture = coperturePerCircoscrizione({ sezioni, risultatiSezione, elezioneId });
+
+  const rsValid = risultatiSezione.filter(
+    (r) => r.elezione_id === elezioneId && CONTA_STATI.has(r.stato),
+  );
+  const rsValidIds = new Set(rsValid.map((r) => r.id));
+  const rsIdToCirc = new Map<string, number>();
+  for (const r of rsValid) {
+    const c = sezToCirc.get(r.sezione_id);
+    if (c !== undefined) rsIdToCirc.set(r.id, c);
+  }
+
+  // somma voti per (circ, lista)
+  const sums = new Map<string, number>(); // key = `${circ}|${lista}`
+  for (const v of votiLista) {
+    if (!rsValidIds.has(v.risultato_sezione_id)) continue;
+    const c = rsIdToCirc.get(v.risultato_sezione_id);
+    if (c === undefined) continue;
+    const k = `${c}|${v.lista_id}`;
+    sums.set(k, (sums.get(k) ?? 0) + v.voti);
+  }
+
+  return coperture.map((cop) => {
+    const celle: MatriceCella[] = liste.map((L) => {
+      const reali = sums.get(`${cop.circoscrizione}|${L.id}`) ?? 0;
+      const proiezione = cop.coverage > 0 ? reali * (cop.total / cop.coverage) : 0;
+      return { lista_id: L.id, voti_reali: reali, proiezione };
+    });
+    return {
+      circoscrizione: cop.circoscrizione,
+      coverage: cop.coverage,
+      total: cop.total,
+      celle,
+    };
+  });
+}

@@ -6,6 +6,106 @@ import type {
 } from '@/lib/database.types';
 import { proiezioneListe, type ProiezioneLista } from './proiezioni';
 import type { ListaRow, VotoListaRow } from '@/lib/database.types';
+import {
+  proiezioneCandidati,
+  sezioniMancanti,
+  matriceCircoscrizioneListe,
+} from './proiezioni';
+import type { CandidatoRow, PreferenzaCandidatoRow } from '@/lib/database.types';
+
+const cand = (id: string, lista_id = 'L1', cognome = 'Rossi'): CandidatoRow => ({
+  id,
+  lista_id,
+  nome: 'Mario',
+  cognome,
+  ordine: 0,
+  note: null,
+  created_at: '2026-04-25T00:00:00Z',
+});
+
+const pref = (
+  rs_id: string,
+  candidato_id: string,
+  voti: number,
+): PreferenzaCandidatoRow => ({
+  id: `p-${rs_id}-${candidato_id}`,
+  risultato_sezione_id: rs_id,
+  candidato_id,
+  voti,
+});
+
+describe('proiezioneCandidati', () => {
+  it('proietta i candidati con stessa logica delle liste', () => {
+    const sezioni = [sez('a1', 1, 1), sez('a2', 2, 1)];
+    const risultati = [rs({ id: 'r1', sezione_id: 'a1', stato: 'submitted' })];
+    const result = proiezioneCandidati({
+      candidati: [cand('c1', 'L1', 'Bianchi')],
+      sezioni,
+      risultatiSezione: risultati,
+      preferenze: [pref('r1', 'c1', 30)],
+      elezioneId: 'el1',
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].voti_reali).toBe(30);
+    expect(result[0].proiezione).toBe(60); // 30 × 2/1
+  });
+});
+
+describe('sezioniMancanti', () => {
+  it('include sezioni con stato draft', () => {
+    const sezioni = [sez('s1', 1, 1)];
+    const risultati = [rs({ id: 'r1', sezione_id: 's1', stato: 'draft' })];
+    const result = sezioniMancanti({ sezioni, risultatiSezione: risultati, elezioneId: 'el1' });
+    expect(result).toHaveLength(1);
+    expect(result[0].statoSezione).toBe('draft');
+  });
+
+  it('include sezioni senza alcun risultato_sezione', () => {
+    const sezioni = [sez('s1', 1, 1)];
+    const result = sezioniMancanti({ sezioni, risultatiSezione: [], elezioneId: 'el1' });
+    expect(result).toHaveLength(1);
+    expect(result[0].statoSezione).toBe('assente');
+  });
+
+  it('esclude sezioni in stato submitted o verified', () => {
+    const sezioni = [sez('s1', 1, 1), sez('s2', 2, 1)];
+    const risultati = [
+      rs({ id: 'r1', sezione_id: 's1', stato: 'submitted' }),
+      rs({ id: 'r2', sezione_id: 's2', stato: 'verified' }),
+    ];
+    const result = sezioniMancanti({ sezioni, risultatiSezione: risultati, elezioneId: 'el1' });
+    expect(result).toHaveLength(0);
+  });
+});
+
+describe('matriceCircoscrizioneListe', () => {
+  it('somma per riga uguaglia totale lista, somma per colonna uguaglia totale circoscrizione', () => {
+    const sezioni = [sez('a', 1, 1), sez('b', 2, 2)];
+    const risultati = [
+      rs({ id: 'r1', sezione_id: 'a', stato: 'submitted' }),
+      rs({ id: 'r2', sezione_id: 'b', stato: 'submitted' }),
+    ];
+    const voti = [
+      vl('r1', 'L1', 10),
+      vl('r1', 'L2', 20),
+      vl('r2', 'L1', 30),
+      vl('r2', 'L2', 40),
+    ];
+    const result = matriceCircoscrizioneListe({
+      liste: [lista('L1', 'A'), lista('L2', 'B')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    expect(result.length).toBe(2);
+    const c1 = result.find((r) => r.circoscrizione === 1)!;
+    expect(c1.celle.find((c) => c.lista_id === 'L1')!.voti_reali).toBe(10);
+    expect(c1.celle.find((c) => c.lista_id === 'L2')!.voti_reali).toBe(20);
+    const c2 = result.find((r) => r.circoscrizione === 2)!;
+    expect(c2.celle.find((c) => c.lista_id === 'L1')!.voti_reali).toBe(30);
+  });
+});
 
 const sez = (
   id: string,
