@@ -4,6 +4,8 @@ import type {
   RisultatoSezioneRow,
   SezioneRow,
 } from '@/lib/database.types';
+import { proiezioneListe, type ProiezioneLista } from './proiezioni';
+import type { ListaRow, VotoListaRow } from '@/lib/database.types';
 
 const sez = (
   id: string,
@@ -88,5 +90,151 @@ describe('coperturePerCircoscrizione', () => {
       elezioneId: 'el1',
     });
     expect(result[0].coverage).toBe(0);
+  });
+});
+
+const lista = (id: string, nome: string, elezione_id = 'el1'): ListaRow => ({
+  id,
+  elezione_id,
+  nome,
+  simbolo_url: null,
+  ordine: 0,
+  created_at: '2026-04-25T00:00:00Z',
+});
+
+const vl = (
+  rs_id: string,
+  lista_id: string,
+  voti: number,
+): VotoListaRow => ({
+  id: `vl-${rs_id}-${lista_id}`,
+  risultato_sezione_id: rs_id,
+  lista_id,
+  voti,
+});
+
+describe('proiezioneListe', () => {
+  it('singola circoscrizione, 5/10 sezioni coperte, lista 100 voti → proiezione 200', () => {
+    const sezioni = Array.from({ length: 10 }, (_, i) => sez(`s${i}`, i + 1, 1));
+    const risultati = sezioni
+      .slice(0, 5)
+      .map((s, i) => rs({ id: `r${i}`, sezione_id: s.id, stato: 'submitted' }));
+    const voti = risultati.map((r) => vl(r.id, 'L1', 20));
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].voti_reali).toBe(100);
+    expect(result[0].proiezione).toBe(200);
+  });
+
+  it('due circoscrizioni eterogenee → proiezione = somma proiezioni per C', () => {
+    const sezioniC1 = [sez('a1', 1, 1), sez('a2', 2, 1)];
+    const sezioniC2 = [sez('b1', 3, 2), sez('b2', 4, 2), sez('b3', 5, 2), sez('b4', 6, 2)];
+    const sezioni = [...sezioniC1, ...sezioniC2];
+    const risultati = [
+      rs({ id: 'r1', sezione_id: 'a1', stato: 'submitted' }),
+      rs({ id: 'r2', sezione_id: 'b1', stato: 'submitted' }),
+      rs({ id: 'r3', sezione_id: 'b2', stato: 'submitted' }),
+    ];
+    const voti = [vl('r1', 'L1', 50), vl('r2', 'L1', 10), vl('r3', 'L1', 20)];
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    // C1: 50 voti / 1 coperta × 2 totale = 100
+    // C2: 30 voti / 2 coperte × 4 totale = 60
+    expect(result[0].proiezione).toBe(160);
+  });
+
+  it('circoscrizione con 0 sezioni coperte → fallback alla media globale', () => {
+    const sezioni = [
+      sez('a1', 1, 1),
+      sez('a2', 2, 1),
+      sez('b1', 3, 2),
+      sez('b2', 4, 2),
+    ];
+    const risultati = [
+      rs({ id: 'r1', sezione_id: 'a1', stato: 'submitted' }),
+      rs({ id: 'r2', sezione_id: 'a2', stato: 'submitted' }),
+    ];
+    const voti = [vl('r1', 'L1', 10), vl('r2', 'L1', 10)];
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    // C1 coverage 2 → proiezione_C1 = 20
+    // C2 coverage 0 → fallback = (20 / 2 globale) × 2 = 20
+    // Totale: 40
+    expect(result[0].proiezione).toBe(40);
+  });
+
+  it('coverage globale 0 → tutte le proiezioni 0', () => {
+    const sezioni = [sez('a1', 1, 1)];
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A')],
+      sezioni,
+      risultatiSezione: [],
+      votiLista: [],
+      elezioneId: 'el1',
+    });
+    expect(result[0].voti_reali).toBe(0);
+    expect(result[0].proiezione).toBe(0);
+  });
+
+  it('banda di confidenza con N=1 circoscrizione coperta → ±15% default', () => {
+    const sezioni = [sez('a1', 1, 1), sez('a2', 2, 1)];
+    const risultati = [rs({ id: 'r1', sezione_id: 'a1', stato: 'submitted' })];
+    const voti = [vl('r1', 'L1', 100)];
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    expect(result[0].proiezione).toBe(200);
+    expect(result[0].banda_min).toBe(170); // 200 × 0.85
+    expect(result[0].banda_max).toBe(230); // 200 × 1.15
+  });
+
+  it('banda di confidenza con N=3 → calcolata da σ relativa', () => {
+    // 3 circoscrizioni tutte coperte, lista L1 con quote diverse → σ > 0
+    const sezioni = [sez('a', 1, 1), sez('b', 2, 2), sez('c', 3, 3)];
+    const risultati = [
+      rs({ id: 'r1', sezione_id: 'a', stato: 'submitted' }),
+      rs({ id: 'r2', sezione_id: 'b', stato: 'submitted' }),
+      rs({ id: 'r3', sezione_id: 'c', stato: 'submitted' }),
+    ];
+    const voti = [
+      vl('r1', 'L1', 30),
+      vl('r1', 'L2', 70),
+      vl('r2', 'L1', 50),
+      vl('r2', 'L2', 50),
+      vl('r3', 'L1', 70),
+      vl('r3', 'L2', 30),
+    ];
+    const result = proiezioneListe({
+      liste: [lista('L1', 'Lista A'), lista('L2', 'Lista B')],
+      sezioni,
+      risultatiSezione: risultati,
+      votiLista: voti,
+      elezioneId: 'el1',
+    });
+    const l1 = result.find((r) => r.lista_id === 'L1')!;
+    expect(l1.proiezione).toBe(150); // 30+50+70
+    // σ delle quote {0.3, 0.5, 0.7} = sqrt((((-0.2)² + 0² + 0.2²) / 3)) ≈ 0.1633
+    expect(l1.banda_min).toBeCloseTo(150 * (1 - 0.1633), 0);
+    expect(l1.banda_max).toBeCloseTo(150 * (1 + 0.1633), 0);
   });
 });
