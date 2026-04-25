@@ -11,6 +11,12 @@ import { GiornateListPage } from '@/features/admin/giornate/GiornateListPage';
 import { GiornataDetailPage } from '@/features/admin/giornate/GiornataDetailPage';
 import { SezioniImportPage } from '@/features/admin/sezioni/SezioniImportPage';
 import { AuditLogPage } from '@/features/admin/audit/AuditLogPage';
+import { PresuntiIndexPage } from '@/features/admin/presunti/PresuntiIndexPage';
+import { PresuntoCandidatoPage } from '@/features/admin/presunti/PresuntoCandidatoPage';
+import { PresuntoSezionePage } from '@/features/admin/presunti/PresuntoSezionePage';
+import { ConfrontoPage } from '@/features/admin/confronto/ConfrontoPage';
+import { CandidatoDrillDown } from '@/features/admin/confronto/CandidatoDrillDown';
+import { SezioneDrillDown } from '@/features/admin/confronto/SezioneDrillDown';
 import { EditorHomePage } from '@/features/editor/EditorHomePage';
 import { SezioniPickPage } from '@/features/editor/SezioniPickPage';
 import { VoteEntryPage } from '@/features/editor/VoteEntryPage';
@@ -36,6 +42,12 @@ export function AppRouter() {
           <Route path="giornate" element={<GiornateListPage />} />
           <Route path="giornate/:id" element={<GiornataDetailPage />} />
           <Route path="sezioni" element={<SezioniImportPage />} />
+          <Route path="presunti" element={<PresuntiIndexPage />} />
+          <Route path="presunti/candidato/:candidatoId" element={<PresuntoCandidatoPage />} />
+          <Route path="presunti/sezione/:sezioneId" element={<PresuntoSezionePage />} />
+          <Route path="confronto" element={<ConfrontoPage />} />
+          <Route path="confronto/candidato/:candidatoId" element={<CandidatoDrillDown />} />
+          <Route path="confronto/sezione/:sezioneId" element={<SezioneDrillDown />} />
           <Route path="audit" element={<AuditLogPage />} />
         </Route>
         <Route
