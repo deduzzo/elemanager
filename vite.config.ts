@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  base: process.env.VITE_BASE_PATH ?? '/',
   plugins: [
     react(),
     VitePWA({
@@ -22,7 +23,8 @@ export default defineConfig({
         theme_color: '#0a0f1e',
         background_color: '#0a0f1e',
         display: 'standalone',
-        start_url: '/',
+        start_url: '.',
+        scope: '.',
         icons: [
           { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml' },
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
