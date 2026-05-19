@@ -6,10 +6,10 @@ import {
   Select,
   useToast,
 } from '@/components/ui';
-import { useCreateProfile, useUpdateProfile } from '@/lib/queries/profiles';
+import { useCreateUser, useUpdateProfile } from '@/lib/queries/profiles';
 import type { ProfileRow, Ruolo } from '@/lib/database.types';
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface UserFormProps {
   open: boolean;
@@ -18,7 +18,8 @@ export interface UserFormProps {
 }
 
 interface FormState {
-  id: string;
+  email: string;
+  password: string;
   nome: string;
   ruolo: Ruolo;
   attivo: boolean;
@@ -26,38 +27,48 @@ interface FormState {
 
 function getInitialState(profile?: ProfileRow): FormState {
   return {
-    id: profile?.id ?? '',
+    email: '',
+    password: '',
     nome: profile?.nome ?? '',
     ruolo: profile?.ruolo ?? 'editor',
     attivo: profile?.attivo ?? true,
   };
 }
 
+function generatePassword(length = 14): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%';
+  const buf = new Uint32Array(length);
+  crypto.getRandomValues(buf);
+  return Array.from(buf, (n) => alphabet[n % alphabet.length]).join('');
+}
+
 export function UserForm({ open, onClose, profile }: UserFormProps) {
   const isEdit = !!profile;
   const [state, setState] = useState<FormState>(() => getInitialState(profile));
-  const [errors, setErrors] = useState<{ id?: string; nome?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; nome?: string }>({});
+  const [showPassword, setShowPassword] = useState(false);
   const { push } = useToast();
-  const createMutation = useCreateProfile();
+  const createMutation = useCreateUser();
   const updateMutation = useUpdateProfile();
 
   useEffect(() => {
     if (open) {
       setState(getInitialState(profile));
       setErrors({});
+      setShowPassword(false);
     }
   }, [open, profile]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   function validate(): boolean {
-    const next: { id?: string; nome?: string } = {};
+    const next: { email?: string; password?: string; nome?: string } = {};
     if (!isEdit) {
-      if (!state.id.trim()) {
-        next.id = 'UUID obbligatorio.';
-      } else if (!UUID_REGEX.test(state.id.trim())) {
-        next.id = 'UUID non valido. Formato atteso: 8-4-4-4-12 caratteri esadecimali.';
-      }
+      const email = state.email.trim().toLowerCase();
+      if (!email) next.email = 'Email obbligatoria.';
+      else if (!EMAIL_REGEX.test(email)) next.email = 'Formato email non valido.';
+      if (!state.password) next.password = 'Password obbligatoria.';
+      else if (state.password.length < 8) next.password = 'Almeno 8 caratteri.';
     }
     if (!state.nome.trim() || state.nome.trim().length < 2) {
       next.nome = 'Il nome deve contenere almeno 2 caratteri.';
@@ -68,13 +79,7 @@ export function UserForm({ open, onClose, profile }: UserFormProps) {
 
   function handleError(err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    const isDuplicate = /duplicate key/i.test(message);
-    push(
-      isDuplicate
-        ? 'Esiste già un profilo per questo UUID.'
-        : `Errore: ${message}`,
-      { type: 'error' },
-    );
+    push(`Errore: ${message}`, { type: 'error' });
   }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -97,10 +102,15 @@ export function UserForm({ open, onClose, profile }: UserFormProps) {
       );
     } else {
       createMutation.mutate(
-        { id: state.id.trim(), nome, ruolo: state.ruolo, attivo: state.attivo },
         {
-          onSuccess: () => {
-            push('Profilo creato', { type: 'success' });
+          email: state.email.trim().toLowerCase(),
+          password: state.password,
+          nome,
+          ruolo: state.ruolo,
+        },
+        {
+          onSuccess: ({ email }) => {
+            push(`Utente ${email} creato`, { type: 'success' });
             onClose();
           },
           onError: handleError,
@@ -109,27 +119,72 @@ export function UserForm({ open, onClose, profile }: UserFormProps) {
     }
   }
 
+  function handleGeneratePassword() {
+    const pwd = generatePassword();
+    setState((s) => ({ ...s, password: pwd }));
+    setShowPassword(true);
+    navigator.clipboard?.writeText(pwd).then(
+      () => push('Password generata e copiata negli appunti', { type: 'success' }),
+      () => push('Password generata (clipboard non disponibile)', { type: 'info' }),
+    );
+  }
+
   return (
     <Modal
       open={open}
       onClose={isPending ? () => {} : onClose}
-      title={isEdit ? 'Modifica profilo' : 'Nuovo profilo'}
+      title={isEdit ? 'Modifica profilo' : 'Nuovo utente'}
       size="md"
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <Input
-          label="UUID"
-          type="text"
-          value={state.id}
-          onChange={(e) => setState((s) => ({ ...s, id: e.target.value }))}
-          disabled={isEdit}
-          required
-          placeholder="es. 550e8400-e29b-41d4-a716-446655440000"
-          hint="Copia l'UUID dalla sezione Authentication → Users di Supabase Studio."
-          error={errors.id}
-          autoComplete="off"
-          spellCheck={false}
-        />
+        {!isEdit && (
+          <>
+            <Input
+              label="Email"
+              type="email"
+              value={state.email}
+              onChange={(e) => setState((s) => ({ ...s, email: e.target.value }))}
+              required
+              placeholder="utente@esempio.it"
+              error={errors.email}
+              autoComplete="off"
+              spellCheck={false}
+            />
+
+            <div className="space-y-2">
+              <Input
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={state.password}
+                onChange={(e) => setState((s) => ({ ...s, password: e.target.value }))}
+                required
+                minLength={8}
+                placeholder="Min 8 caratteri"
+                error={errors.password}
+                autoComplete="new-password"
+                hint="L'utente potrà cambiarla in seguito."
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? 'Nascondi' : 'Mostra'}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleGeneratePassword}
+                >
+                  Genera random
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
 
         <Input
           label="Nome"
@@ -154,15 +209,17 @@ export function UserForm({ open, onClose, profile }: UserFormProps) {
           <option value="viewer">viewer</option>
         </Select>
 
-        <label className="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={state.attivo}
-            onChange={(e) => setState((s) => ({ ...s, attivo: e.target.checked }))}
-            className="h-4 w-4 rounded border-white/20 bg-white/5 accent-neon-cyan"
-          />
-          <span className="text-sm text-slate-300">Profilo attivo</span>
-        </label>
+        {isEdit && (
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={state.attivo}
+              onChange={(e) => setState((s) => ({ ...s, attivo: e.target.checked }))}
+              className="h-4 w-4 rounded border-white/20 bg-white/5 accent-neon-cyan"
+            />
+            <span className="text-sm text-slate-300">Profilo attivo</span>
+          </label>
+        )}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button
@@ -174,7 +231,7 @@ export function UserForm({ open, onClose, profile }: UserFormProps) {
             Annulla
           </Button>
           <Button type="submit" variant="primary" disabled={isPending}>
-            {isPending ? 'Salvataggio…' : isEdit ? 'Salva' : 'Crea'}
+            {isPending ? 'Salvataggio…' : isEdit ? 'Salva' : 'Crea utente'}
           </Button>
         </div>
       </form>
