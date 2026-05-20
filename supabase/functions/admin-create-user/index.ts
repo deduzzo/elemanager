@@ -68,6 +68,7 @@ Deno.serve(async (req: Request) => {
   // Client con service_role per verifica ruolo (bypass RLS) e mutazioni
   const admin = createClient(url, serviceKey, {
     auth: { persistSession: false, autoRefreshToken: false },
+    db: { schema: 'elemanager' },
   });
 
   const { data: callerProfile, error: profileErr } = await admin
