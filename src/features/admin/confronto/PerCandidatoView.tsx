@@ -178,7 +178,7 @@ export function PerCandidatoView({
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link
-                      to={`/admin/confronto/candidato/${r.candidato_id}?elezione=${elezioneId}`}
+                      to={`/app/admin/confronto/candidato/${r.candidato_id}?elezione=${elezioneId}`}
                       className="text-neon-cyan hover:underline"
                     >
                       Dettaglio →

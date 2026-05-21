@@ -125,7 +125,7 @@ export function CandidatoDrillDown() {
         subtitle={`Lista: ${ctx.lista.nome}`}
       />
       <Link
-        to={`/admin/confronto`}
+        to={`/app/admin/confronto`}
         className="text-sm text-neon-cyan hover:underline"
       >
         ← Torna al confronto

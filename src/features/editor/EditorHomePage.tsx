@@ -57,7 +57,7 @@ export function EditorHomePage() {
           {openGiornate.map((g) => (
             <Link
               key={g.id}
-              to={`/editor/giornate/${g.id}`}
+              to={`/app/editor/giornate/${g.id}`}
               className="glass p-5 rounded-2xl relative flex flex-col gap-3 transition-colors hover:bg-white/10"
             >
               <div className="absolute top-3 right-3">

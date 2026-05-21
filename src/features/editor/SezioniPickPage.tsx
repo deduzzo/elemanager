@@ -63,7 +63,7 @@ function StatusBadge({ status }: { status: SezioneStatus }) {
 function BackLink() {
   return (
     <Link
-      to="/editor"
+      to="/app/editor"
       className="inline-block text-sm text-neon-cyan hover:text-neon-cyan/80 transition-colors mb-3"
     >
       ← Torna alle giornate
@@ -157,7 +157,7 @@ export function SezioniPickPage() {
   }, [computed, searchTerm, filterMode]);
 
   if (!giornataId) {
-    return <Navigate to="/editor" replace />;
+    return <Navigate to="/app/editor" replace />;
   }
 
   const isLoading =
@@ -202,7 +202,7 @@ export function SezioniPickPage() {
         <BackLink />
         <div className="glass p-6 text-slate-300">
           <p className="mb-2">Giornata non trovata.</p>
-          <Link to="/editor" className="text-neon-cyan hover:underline">
+          <Link to="/app/editor" className="text-neon-cyan hover:underline">
             ← Torna alle giornate
           </Link>
         </div>
@@ -281,7 +281,7 @@ export function SezioniPickPage() {
               {filteredSorted.map(({ sezione, status }) => (
                 <Link
                   key={sezione.id}
-                  to={`/editor/giornate/${giornataId}/sezioni/${sezione.id}`}
+                  to={`/app/editor/giornate/${giornataId}/sezioni/${sezione.id}`}
                   className="glass p-4 rounded-2xl flex items-center gap-4 transition-colors hover:bg-white/10"
                 >
                   <div className="text-2xl font-bold bg-gradient-neon bg-clip-text text-transparent min-w-[3rem] text-center">

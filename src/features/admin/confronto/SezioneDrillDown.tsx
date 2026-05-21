@@ -137,7 +137,7 @@ export function SezioneDrillDown() {
       <div className="text-sm text-slate-400">
         Stato: {stateLabel[rs?.stato ?? 'assente']}
       </div>
-      <Link to="/admin/confronto" className="text-sm text-neon-cyan hover:underline">
+      <Link to="/app/admin/confronto" className="text-sm text-neon-cyan hover:underline">
         ← Torna al confronto
       </Link>
 

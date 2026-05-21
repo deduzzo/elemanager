@@ -152,7 +152,7 @@ export function PerSezioneView({
                 </td>
                 <td className="px-4 py-2 text-right">
                   <Link
-                    to={`/admin/confronto/sezione/${r.sezione_id}?elezione=${elezioneId}`}
+                    to={`/app/admin/confronto/sezione/${r.sezione_id}?elezione=${elezioneId}`}
                     className="text-neon-cyan hover:underline"
                   >
                     Dettaglio →

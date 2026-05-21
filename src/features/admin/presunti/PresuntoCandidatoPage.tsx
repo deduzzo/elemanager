@@ -149,7 +149,7 @@ export function PresuntoCandidatoPage() {
         title={`${candExt.cognome} ${candExt.nome}`}
         subtitle={`Lista: ${candExt.lista.nome}`}
       />
-      <Link to="/admin/presunti" className="text-sm text-neon-cyan hover:underline">
+      <Link to="/app/admin/presunti" className="text-sm text-neon-cyan hover:underline">
         ← Torna all'elenco
       </Link>
 

@@ -4,13 +4,13 @@ import { PageHeader } from '@/components/ui';
 type Card = { to: string; title: string; description: string };
 
 const cards: Card[] = [
-  { to: '/admin/users', title: 'Utenti', description: 'Gestisci profili e ruoli di admin, editor, viewer.' },
-  { to: '/admin/giornate', title: 'Giornate elettorali', description: 'Crea giornate, elezioni, liste e candidati.' },
-  { to: '/admin/sezioni', title: 'Sezioni', description: 'Importa CSV dei seggi e visualizza sulla mappa.' },
-  { to: '/admin/presunti', title: 'Voti presunti', description: 'Inserisci stime voti per candidato (totale e per sezione).' },
-  { to: '/admin/confronto', title: 'Confronto', description: 'Dashboard scostamenti presunti vs reali in tempo reale.' },
-  { to: '/admin/proiezioni', title: 'Proiezioni', description: 'Stime di risultato basate sullo spoglio in corso.' },
-  { to: '/admin/audit', title: 'Audit log', description: 'Storico modifiche voti e operazioni.' },
+  { to: '/app/admin/users', title: 'Utenti', description: 'Gestisci profili e ruoli di admin, editor, viewer.' },
+  { to: '/app/admin/giornate', title: 'Giornate elettorali', description: 'Crea giornate, elezioni, liste e candidati.' },
+  { to: '/app/admin/sezioni', title: 'Sezioni', description: 'Importa CSV dei seggi e visualizza sulla mappa.' },
+  { to: '/app/admin/presunti', title: 'Voti presunti', description: 'Inserisci stime voti per candidato (totale e per sezione).' },
+  { to: '/app/admin/confronto', title: 'Confronto', description: 'Dashboard scostamenti presunti vs reali in tempo reale.' },
+  { to: '/app/admin/proiezioni', title: 'Proiezioni', description: 'Stime di risultato basate sullo spoglio in corso.' },
+  { to: '/app/admin/audit', title: 'Audit log', description: 'Storico modifiche voti e operazioni.' },
 ];
 
 export function AdminIndexPage() {

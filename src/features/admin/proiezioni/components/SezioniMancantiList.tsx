@@ -61,7 +61,7 @@ export function SezioniMancantiList({
                         <span className="text-slate-400">— {s.indirizzo ?? '—'}</span>
                       </span>
                       <Link
-                        to="/admin/sezioni"
+                        to="/app/admin/sezioni"
                         className="text-xs text-neon-cyan hover:underline"
                       >
                         {s.statoSezione === 'draft' ? 'in bozza' : 'in attesa'} →

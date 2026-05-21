@@ -138,7 +138,7 @@ export function GiornateListPage() {
 
               <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
                 <Link
-                  to={`/admin/giornate/${g.id}`}
+                  to={`/app/admin/giornate/${g.id}`}
                   className="text-neon-cyan text-sm font-medium hover:text-neon-cyan/80 transition-colors"
                 >
                   Apri →

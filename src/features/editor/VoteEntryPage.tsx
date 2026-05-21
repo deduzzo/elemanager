@@ -21,7 +21,7 @@ export function VoteEntryPage() {
   if (!elezioni || elezioni.length === 0) {
     return (
       <div className="space-y-3">
-        <Link to={`/editor/giornate/${giornataId}`} className="text-neon-cyan text-sm">
+        <Link to={`/app/editor/giornate/${giornataId}`} className="text-neon-cyan text-sm">
           ← Torna alle sezioni
         </Link>
         <PageHeader
@@ -37,7 +37,7 @@ export function VoteEntryPage() {
 
   return (
     <div className="space-y-3">
-      <Link to={`/editor/giornate/${giornataId}`} className="text-neon-cyan text-sm">
+      <Link to={`/app/editor/giornate/${giornataId}`} className="text-neon-cyan text-sm">
         ← Torna alle sezioni
       </Link>
       <PageHeader

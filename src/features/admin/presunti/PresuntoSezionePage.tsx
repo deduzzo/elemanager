@@ -160,7 +160,7 @@ export function PresuntoSezionePage() {
           ) : undefined
         }
       />
-      <Link to="/admin/presunti" className="text-sm text-neon-cyan hover:underline">
+      <Link to="/app/admin/presunti" className="text-sm text-neon-cyan hover:underline">
         ← Torna all'elenco
       </Link>
 

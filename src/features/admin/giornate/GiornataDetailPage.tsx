@@ -38,7 +38,7 @@ function formatData(data: string): string {
 function BackLink() {
   return (
     <Link
-      to="/admin/giornate"
+      to="/app/admin/giornate"
       className="inline-block text-sm text-neon-cyan hover:text-neon-cyan/80 transition-colors mb-3"
     >
       ← Torna alle giornate
@@ -100,7 +100,7 @@ export function GiornataDetailPage() {
   }
 
   if (!id) {
-    return <Navigate to="/admin/giornate" replace />;
+    return <Navigate to="/app/admin/giornate" replace />;
   }
 
   if (giornataQuery.isLoading) {
@@ -133,7 +133,7 @@ export function GiornataDetailPage() {
         <BackLink />
         <div className="glass p-6 text-slate-300">
           <p className="mb-2">Giornata non trovata.</p>
-          <Link to="/admin/giornate" className="text-neon-cyan hover:underline">
+          <Link to="/app/admin/giornate" className="text-neon-cyan hover:underline">
             ← Torna alle giornate
           </Link>
         </div>

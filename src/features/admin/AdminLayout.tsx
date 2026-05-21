@@ -1,14 +1,14 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 const items = [
-  { to: '/admin', label: 'Home', end: true },
-  { to: '/admin/users', label: 'Utenti' },
-  { to: '/admin/giornate', label: 'Giornate' },
-  { to: '/admin/sezioni', label: 'Sezioni' },
-  { to: '/admin/presunti', label: 'Presunti' },
-  { to: '/admin/confronto', label: 'Confronto' },
-  { to: '/admin/proiezioni', label: 'Proiezioni' },
-  { to: '/admin/audit', label: 'Audit' },
+  { to: '/app/admin', label: 'Home', end: true },
+  { to: '/app/admin/users', label: 'Utenti' },
+  { to: '/app/admin/giornate', label: 'Giornate' },
+  { to: '/app/admin/sezioni', label: 'Sezioni' },
+  { to: '/app/admin/presunti', label: 'Presunti' },
+  { to: '/app/admin/confronto', label: 'Confronto' },
+  { to: '/app/admin/proiezioni', label: 'Proiezioni' },
+  { to: '/app/admin/audit', label: 'Audit' },
 ];
 
 export function AdminLayout() {

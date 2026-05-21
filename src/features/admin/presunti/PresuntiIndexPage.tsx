@@ -167,7 +167,7 @@ function PerCandidatoTable({ elezioneId }: { elezioneId: string }) {
                 <td className="px-4 py-2 text-right">{r.numStime}</td>
                 <td className="px-4 py-2 text-right">
                   <Link
-                    to={`/admin/presunti/candidato/${r.id}`}
+                    to={`/app/admin/presunti/candidato/${r.id}`}
                     className="text-neon-cyan hover:underline"
                   >
                     Modifica →
@@ -248,7 +248,7 @@ function PerSezioneTable({
                 <td className="px-4 py-2 text-right">{r.totale}</td>
                 <td className="px-4 py-2 text-right">
                   <Link
-                    to={`/admin/presunti/sezione/${r.id}`}
+                    to={`/app/admin/presunti/sezione/${r.id}`}
                     className="text-neon-cyan hover:underline"
                   >
                     Modifica →
