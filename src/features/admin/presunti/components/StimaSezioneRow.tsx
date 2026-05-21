@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Input, Select } from '@/components/ui';
 
-type SezioneOpt = { id: string; numero: number; indirizzo: string | null };
+type SezioneOpt = {
+  id: string;
+  numero: number;
+  indirizzo: string | null;
+  ubicazione: string | null;
+};
 
 export function StimaSezioneRow({
   row,
@@ -41,7 +46,7 @@ export function StimaSezioneRow({
         <option value="">— seleziona sezione —</option>
         {sezioniOptions.map((s) => (
           <option key={s.id} value={s.id}>
-            Sez. {s.numero} — {s.indirizzo ?? ''}
+            Sez. {s.numero} — {s.ubicazione ?? s.indirizzo ?? ''}
           </option>
         ))}
       </Select>

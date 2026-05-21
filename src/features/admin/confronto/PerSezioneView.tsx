@@ -136,7 +136,7 @@ export function PerSezioneView({
             return (
               <tr key={r.sezione_id} className="border-t border-white/5 hover:bg-white/5">
                 <td className="px-4 py-2">Sez. {r.numero}</td>
-                <td className="px-4 py-2 text-slate-300">{r.indirizzo ?? '—'}</td>
+                <td className="px-4 py-2 text-slate-300">{r.ubicazione ?? r.indirizzo ?? '—'}</td>
                 <td className="px-4 py-2 text-slate-300">
                   {stateLabel[r.statoSezione] ?? r.statoSezione}
                 </td>

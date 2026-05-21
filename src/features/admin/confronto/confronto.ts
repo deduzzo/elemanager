@@ -25,6 +25,7 @@ export interface SezioneConfrontoRow {
   sezione_id: string;
   numero: number;
   indirizzo: string | null;
+  ubicazione: string | null;
   statoSezione: StatoSezioneDrill;
   candidatiStimati: number;
   realeTot: number;
@@ -155,6 +156,7 @@ export function aggregateBySezione(params: {
       sezione_id: s.id,
       numero: s.numero,
       indirizzo: s.indirizzo,
+      ubicazione: s.ubicazione,
       statoSezione: stato,
       candidatiStimati: stime.size,
       realeTot,

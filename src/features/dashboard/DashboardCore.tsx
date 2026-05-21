@@ -23,6 +23,7 @@ import { ProiezioneCard } from './ProiezioneCard';
 import { SezioniDrillDownModal } from './drilldown/SezioniDrillDownModal';
 import { VotiListaDrillDownModal } from './drilldown/VotiListaDrillDownModal';
 import { CandidatiDrillDownModal } from './drilldown/CandidatiDrillDownModal';
+import { PreferitiSection } from './PreferitiSection';
 
 type DrillDown = null | 'sezioni' | 'liste' | 'candidati';
 
@@ -176,6 +177,15 @@ export function DashboardCore({ giornataId, elezioneId }: Props) {
 
       {hasSelection && aggregati && copertura && (
         <div className="space-y-4">
+          {/* Candidati preferiti (visibili a tutti se ce ne sono) */}
+          <PreferitiSection
+            liste={liste}
+            candidati={allCandidati}
+            sezioni={sezioni}
+            risultati={risultatiElezione}
+            preferenze={allPreferenze}
+          />
+
           {/* Wrapper KPI: la card copertura apre il drill-down sezioni */}
           <div onClick={() => setDrill('sezioni')} role="button" tabIndex={0}
             className="cursor-pointer hover:opacity-95 transition-opacity"

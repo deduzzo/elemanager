@@ -91,6 +91,7 @@ export function SezioniDrillDownModal({
     return righe.filter(
       (r) =>
         String(r.sezione.numero).includes(q) ||
+        (r.sezione.ubicazione ?? '').toLowerCase().includes(q) ||
         (r.sezione.indirizzo ?? '').toLowerCase().includes(q),
     );
   }, [righe, search]);
@@ -111,7 +112,7 @@ export function SezioniDrillDownModal({
             <thead className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 text-xs uppercase text-slate-400">
               <tr>
                 <th className="text-left px-3 py-2 w-12">N.</th>
-                <th className="text-left px-3 py-2">Indirizzo</th>
+                <th className="text-left px-3 py-2">Ubicazione</th>
                 <th className="text-left px-3 py-2">Stato</th>
                 <th className="text-right px-3 py-2">Schede</th>
                 <th className="text-right px-3 py-2">Voti tot.</th>
@@ -137,7 +138,7 @@ export function SezioniDrillDownModal({
                         {r.sezione.numero}
                       </td>
                       <td className="px-3 py-2 text-slate-200 truncate max-w-xs">
-                        {r.sezione.indirizzo ?? '—'}
+                        {r.sezione.ubicazione ?? r.sezione.indirizzo ?? '—'}
                       </td>
                       <td className={`px-3 py-2 ${lbl.cls}`}>{lbl.text}</td>
                       <td className="px-3 py-2 text-right font-mono">

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Modal } from '@/components/ui';
+import { Modal, StarToggle } from '@/components/ui';
 import type { AggregatiElezione } from '@/lib/aggregates';
 import type {
   CandidatoRow,
@@ -85,6 +85,7 @@ export function CandidatiDrillDownModal({
             <thead className="sticky top-0 bg-slate-900/95 backdrop-blur border-b border-white/10 text-xs uppercase text-slate-400">
               <tr>
                 <th className="text-left px-3 py-2 w-12">#</th>
+                <th className="text-left px-3 py-2 w-8" />
                 <th className="text-left px-3 py-2">Candidato</th>
                 <th className="text-left px-3 py-2">Lista</th>
                 <th className="text-right px-3 py-2">Voti</th>
@@ -93,7 +94,7 @@ export function CandidatiDrillDownModal({
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-6 text-slate-500">
+                  <td colSpan={5} className="text-center py-6 text-slate-500">
                     Nessun candidato trovato.
                   </td>
                 </tr>
@@ -105,6 +106,14 @@ export function CandidatiDrillDownModal({
                     className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
                   >
                     <td className="px-3 py-2 font-mono text-slate-500">{i + 1}</td>
+                    <td className="px-3 py-2">
+                      <StarToggle
+                        candidatoId={r.candidato.id}
+                        preferito={r.candidato.preferito}
+                        size="sm"
+                        alwaysShow
+                      />
+                    </td>
                     <td className="px-3 py-2 text-slate-200">
                       {r.candidato.cognome} {r.candidato.nome}
                     </td>
@@ -145,7 +154,7 @@ interface DettaglioProps {
   preferenze: PreferenzaCandidatoRow[];
 }
 
-function CandidatoDettaglioModal({
+export function CandidatoDettaglioModal({
   candidato,
   onClose,
   lista,
@@ -179,11 +188,18 @@ function CandidatoDettaglioModal({
       size="lg"
     >
       <div className="space-y-3">
-        <div className="text-sm text-slate-300">
-          Lista: <span className="text-neon-cyan">{lista?.nome ?? '—'}</span>
-          {' · '}
-          Totale preferenze:{' '}
-          <span className="font-mono text-neon-cyan">{nf.format(totale)}</span>
+        <div className="text-sm text-slate-300 flex items-center gap-2 flex-wrap">
+          <StarToggle
+            candidatoId={candidato.id}
+            preferito={candidato.preferito}
+            alwaysShow
+          />
+          <span>
+            Lista: <span className="text-neon-cyan">{lista?.nome ?? '—'}</span>
+            {' · '}
+            Totale preferenze:{' '}
+            <span className="font-mono text-neon-cyan">{nf.format(totale)}</span>
+          </span>
         </div>
 
         <div>

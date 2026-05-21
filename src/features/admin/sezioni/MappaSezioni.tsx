@@ -151,7 +151,7 @@ export function MappaSezioni({ sezioni }: MappaSezioniProps) {
               <br />
               {s.ubicazione ?? ''}
               <br />
-              {s.indirizzo ?? ''}
+              {s.ubicazione ?? s.indirizzo ?? ''}
               <br />
               Circoscrizione: {s.circoscrizione ?? '-'}
             </Popup>

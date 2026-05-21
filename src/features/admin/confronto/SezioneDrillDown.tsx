@@ -132,7 +132,7 @@ export function SezioneDrillDown() {
     <div className="space-y-4">
       <PageHeader
         title={`Sezione ${sezione.numero}`}
-        subtitle={sezione.indirizzo ?? ''}
+        subtitle={sezione.ubicazione ?? sezione.indirizzo ?? ''}
       />
       <div className="text-sm text-slate-400">
         Stato: {stateLabel[rs?.stato ?? 'assente']}

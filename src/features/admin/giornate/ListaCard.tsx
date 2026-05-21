@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, ConfirmDialog, useToast } from '@/components/ui';
+import { Button, ConfirmDialog, StarToggle, useToast } from '@/components/ui';
 import {
   useCandidatiByLista,
   useDeleteCandidato,
@@ -165,6 +165,7 @@ export function ListaCard({ lista }: ListaCardProps) {
                   key={c.id}
                   className="flex items-center gap-3 py-2 text-sm"
                 >
+                  <StarToggle candidatoId={c.id} preferito={c.preferito} alwaysShow />
                   <div className="flex-1 min-w-0">
                     <div className="text-slate-100">
                       <span className="font-medium">

@@ -20,6 +20,7 @@ const cand = (id: string, lista_id = 'L1', cognome = 'Rossi'): CandidatoRow => (
   cognome,
   ordine: 0,
   note: null,
+  preferito: false,
   created_at: '2026-04-25T00:00:00Z',
 });
 

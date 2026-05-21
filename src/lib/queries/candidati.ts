@@ -65,3 +65,27 @@ export function useDeleteCandidato() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
   });
 }
+
+/**
+ * Admin-only: toggle del flag `preferito` su un candidato.
+ * La RLS già blocca i non-admin. Ritorna la riga aggiornata.
+ */
+export function useTogglePreferitoCandidato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id: string;
+      preferito: boolean;
+    }): Promise<CandidatoRow> => {
+      const { data, error } = await db
+        .from('candidati')
+        .update({ preferito: input.preferito })
+        .eq('id', input.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as CandidatoRow;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
+  });
+}

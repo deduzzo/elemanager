@@ -58,7 +58,7 @@ export function SezioniMancantiList({
                     <li key={s.sezione_id} className="flex items-center justify-between">
                       <span>
                         Sez. {s.numero}{' '}
-                        <span className="text-slate-400">— {s.indirizzo ?? '—'}</span>
+                        <span className="text-slate-400">— {s.ubicazione ?? s.indirizzo ?? '—'}</span>
                       </span>
                       <Link
                         to="/app/admin/sezioni"

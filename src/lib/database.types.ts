@@ -48,6 +48,7 @@ export type CandidatoRow = Timestamped & {
   cognome: string;
   ordine: number;
   note: string | null;
+  preferito: boolean;
 };
 
 export type SezioneRow = {
@@ -215,7 +216,7 @@ export type ElezioneUpdate = Partial<Omit<ElezioneRow, 'id' | 'created_at'>>;
 export type ListaInsert = WithDefaults<ListaRow, 'id' | 'simbolo_url' | 'ordine' | 'created_at'>;
 export type ListaUpdate = Partial<Omit<ListaRow, 'id' | 'created_at'>>;
 
-export type CandidatoInsert = WithDefaults<CandidatoRow, 'id' | 'ordine' | 'note' | 'created_at'>;
+export type CandidatoInsert = WithDefaults<CandidatoRow, 'id' | 'ordine' | 'note' | 'preferito' | 'created_at'>;
 export type CandidatoUpdate = Partial<Omit<CandidatoRow, 'id' | 'created_at'>>;
 
 export type SezioneInsert = WithDefaults<

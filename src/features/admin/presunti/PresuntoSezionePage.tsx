@@ -146,7 +146,7 @@ export function PresuntoSezionePage() {
     <div className="space-y-4">
       <PageHeader
         title={`Sezione ${sezione.numero}`}
-        subtitle={sezione.indirizzo ?? ''}
+        subtitle={sezione.ubicazione ?? sezione.indirizzo ?? ''}
         actions={
           isAdmin ? (
             <Button

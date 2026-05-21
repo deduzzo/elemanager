@@ -70,7 +70,7 @@ function candidato(
   cognome: string,
   lista_id: string
 ): CandidatoRow {
-  return { id, lista_id, nome, cognome, ordine: 0, note: null, created_at: now };
+  return { id, lista_id, nome, cognome, ordine: 0, note: null, preferito: false, created_at: now };
 }
 
 function votoLista(
