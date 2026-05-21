@@ -20,7 +20,7 @@ export function LoginPage() {
       setError(/invalid/i.test(error.message) ? 'Credenziali non valide.' : error.message);
       return;
     }
-    const target = location.state?.from?.pathname ?? '/';
+    const target = location.state?.from?.pathname ?? '/app';
     navigate(target, { replace: true });
   }
 

@@ -1,8 +1,10 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { AppShell } from '@/components/layout/AppShell';
 import { HomePage } from '@/pages/HomePage';
+import { HomePublicPage } from '@/pages/HomePublicPage';
+import { DashboardPublicaPage } from '@/pages/DashboardPublicaPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { AdminLayout } from '@/features/admin/AdminLayout';
 import { AdminIndexPage } from '@/features/admin/AdminIndexPage';
@@ -27,8 +29,23 @@ import { LivePage } from '@/features/live/LivePage';
 export function AppRouter() {
   return (
     <Routes>
+      {/* Public */}
+      <Route path="/" element={<HomePublicPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+      <Route
+        path="/pubblico/elezioni/:elezioneId"
+        element={<DashboardPublicaPage />}
+      />
+
+      {/* Authenticated app */}
+      <Route
+        path="/app"
+        element={
+          <ProtectedRoute>
+            <AppShell />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<HomePage />} />
         <Route
           path="admin"
@@ -71,6 +88,14 @@ export function AppRouter() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
+
+      {/* Redirect compat per vecchi bookmark/share */}
+      <Route path="/admin/*" element={<Navigate to="/app/admin" replace />} />
+      <Route path="/editor/*" element={<Navigate to="/app/editor" replace />} />
+      <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+      <Route path="/live" element={<Navigate to="/app/live" replace />} />
+
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

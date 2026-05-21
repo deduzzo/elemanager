@@ -5,11 +5,11 @@ import type { Ruolo } from '@/lib/database.types';
 type Item = { to: string; label: string; roles?: Ruolo[] };
 
 const items: Item[] = [
-  { to: '/', label: 'Home' },
-  { to: '/live', label: 'Live' },
-  { to: '/admin', label: 'Admin', roles: ['admin'] },
-  { to: '/editor', label: 'Editor', roles: ['admin', 'editor'] },
-  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/app', label: 'Home' },
+  { to: '/app/live', label: 'Live' },
+  { to: '/app/admin', label: 'Admin', roles: ['admin'] },
+  { to: '/app/editor', label: 'Editor', roles: ['admin', 'editor'] },
+  { to: '/app/dashboard', label: 'Dashboard' },
 ];
 
 export function BottomNav() {
@@ -27,7 +27,7 @@ export function BottomNav() {
         <NavLink
           key={it.to}
           to={it.to}
-          end={it.to === '/'}
+          end={it.to === '/app'}
           className={({ isActive }) =>
             `text-center py-3 text-sm transition-colors ${
               isActive ? 'text-neon-cyan' : 'text-slate-300'

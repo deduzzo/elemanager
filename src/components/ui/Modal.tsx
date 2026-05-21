@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 
-export type ModalSize = 'sm' | 'md' | 'lg';
+export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ModalProps {
   open: boolean;
@@ -15,6 +15,7 @@ const sizeClasses: Record<ModalSize, string> = {
   sm: 'max-w-sm',
   md: 'max-w-lg',
   lg: 'max-w-3xl',
+  xl: 'max-w-5xl',
 };
 
 export function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {

@@ -31,7 +31,7 @@ export function ProtectedRoute({ children, allow }: Props) {
   }
 
   if (allow && !allow.includes(profile.ruolo)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   return <>{children}</>;

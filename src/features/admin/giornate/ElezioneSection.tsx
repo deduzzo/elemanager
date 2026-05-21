@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button, ConfirmDialog, useToast } from '@/components/ui';
-import { useDeleteElezione } from '@/lib/queries/elezioni';
+import { useDeleteElezione, useUpdateElezione } from '@/lib/queries/elezioni';
 import { useListeByElezione } from '@/lib/queries/liste';
 import type { ElezioneRow } from '@/lib/database.types';
 import { ElezioneForm } from './ElezioneForm';
@@ -19,8 +19,29 @@ export function ElezioneSection({ elezione, onDeleted }: ElezioneSectionProps) {
 
   const { push } = useToast();
   const deleteMutation = useDeleteElezione();
+  const updateMutation = useUpdateElezione();
   const listeQuery = useListeByElezione(elezione.id);
   const liste = useMemo(() => listeQuery.data ?? [], [listeQuery.data]);
+
+  const togglePubblica = () => {
+    const nextValue = !elezione.pubblica;
+    updateMutation.mutate(
+      { id: elezione.id, patch: { pubblica: nextValue } },
+      {
+        onSuccess: () =>
+          push(
+            nextValue
+              ? `«${elezione.nome}» ora visibile pubblicamente`
+              : `«${elezione.nome}» tornata privata`,
+            { type: 'success' },
+          ),
+        onError: (err) => {
+          const msg = err instanceof Error ? err.message : String(err);
+          push(`Errore aggiornamento: ${msg}`, { type: 'error' });
+        },
+      },
+    );
+  };
 
   function confirmDelete() {
     const nome = elezione.nome;
@@ -51,6 +72,23 @@ export function ElezioneSection({ elezione, onDeleted }: ElezioneSectionProps) {
             <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-500/20 text-slate-300">
               {elezione.tipo}
             </span>
+            <button
+              type="button"
+              onClick={togglePubblica}
+              disabled={updateMutation.isPending}
+              title={
+                elezione.pubblica
+                  ? 'Disattiva: i risultati torneranno privati'
+                  : 'Attiva: i risultati saranno visibili dalla home pubblica senza login'
+              }
+              className={`px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
+                elezione.pubblica
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30'
+                  : 'bg-slate-500/10 text-slate-400 border-white/10 hover:bg-white/10'
+              } ${updateMutation.isPending ? 'opacity-50' : ''}`}
+            >
+              {elezione.pubblica ? '🔓 Pubblica' : '🔒 Privata'}
+            </button>
           </div>
         </div>
         <div className="flex gap-2 shrink-0">

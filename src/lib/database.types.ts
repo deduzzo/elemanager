@@ -30,6 +30,7 @@ export type ElezioneRow = Timestamped & {
   nome: string;
   tipo: TipoElezione;
   ordine: number;
+  pubblica: boolean;
 };
 
 export type ListaRow = Timestamped & {
@@ -208,7 +209,7 @@ export type ProfileUpdate = Partial<Omit<ProfileRow, 'id' | 'created_at'>>;
 export type GiornataInsert = WithDefaults<GiornataRow, 'id' | 'stato' | 'comune' | 'created_at'>;
 export type GiornataUpdate = Partial<Omit<GiornataRow, 'id' | 'created_at'>>;
 
-export type ElezioneInsert = WithDefaults<ElezioneRow, 'id' | 'ordine' | 'created_at'>;
+export type ElezioneInsert = WithDefaults<ElezioneRow, 'id' | 'ordine' | 'pubblica' | 'created_at'>;
 export type ElezioneUpdate = Partial<Omit<ElezioneRow, 'id' | 'created_at'>>;
 
 export type ListaInsert = WithDefaults<ListaRow, 'id' | 'simbolo_url' | 'ordine' | 'created_at'>;
@@ -283,6 +284,8 @@ export type Database = {
       auth_role: { Args: Record<string, never>; Returns: string };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       giornata_is_open: { Args: { p_giornata_id: string }; Returns: boolean };
+      elezione_is_public: { Args: { p_elezione_id: string }; Returns: boolean };
+      giornata_has_public: { Args: { p_giornata_id: string }; Returns: boolean };
       reset_voti_effettivi_sezione_elezione: {
         Args: { p_sezione_id: string; p_elezione_id: string };
         Returns: string[];
