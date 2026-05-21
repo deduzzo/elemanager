@@ -1,7 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import { PageHeader, Select, Skeleton, useToast } from '@/components/ui';
+import {
+  Button,
+  ConfirmDialog,
+  PageHeader,
+  Select,
+  Skeleton,
+  useToast,
+} from '@/components/ui';
 import { db } from '@/lib/queries/_db';
 import { useElezioniByGiornata } from '@/lib/queries/elezioni';
 import { useListeByElezione } from '@/lib/queries/liste';
@@ -10,7 +17,9 @@ import {
   useUpsertVotoPresunto,
   useUpdateVotoPresunto,
   useDeleteVotoPresunto,
+  useResetVotiPresuntiSezioneElezione,
 } from '@/lib/queries/votiPresunti';
+import { useRole } from '@/features/auth/useRole';
 import { CandidatoVotiRow } from './components/CandidatoVotiRow';
 import type { CandidatoRow, SezioneRow } from '@/lib/database.types';
 
@@ -52,11 +61,14 @@ function useCandidatiByListe(listaIds: string[]) {
 export function PresuntoSezionePage() {
   const { sezioneId } = useParams<{ sezioneId: string }>();
   const { push } = useToast();
+  const { data: profile } = useRole();
+  const isAdmin = profile?.ruolo === 'admin';
 
   const { data: sezione, isLoading: loadingSez } = useSezione(sezioneId);
   const { data: elezioni = [] } = useElezioniByGiornata(sezione?.giornata_id);
   const [elezioneId, setElezioneId] = useState<string>('');
   const selectedElezioneId = elezioneId || elezioni[0]?.id || '';
+  const selectedElezione = elezioni.find((e) => e.id === selectedElezioneId);
 
   const { data: liste = [] } = useListeByElezione(selectedElezioneId || undefined);
   const candidati = useCandidatiByListe(liste.map((l) => l.id));
@@ -65,6 +77,8 @@ export function PresuntoSezionePage() {
   const upsert = useUpsertVotoPresunto();
   const update = useUpdateVotoPresunto();
   const del = useDeleteVotoPresunto();
+  const resetPresunti = useResetVotiPresuntiSezioneElezione();
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const presuntiByCand = useMemo(() => {
     const m = new Map<string, { id: string; voti: number }>();
@@ -100,6 +114,25 @@ export function PresuntoSezionePage() {
 
   const totaleVoti = Array.from(presuntiByCand.values()).reduce((a, b) => a + b.voti, 0);
 
+  const handleResetPresunti = async () => {
+    if (!sezioneId || !selectedElezioneId) return;
+    try {
+      const deletedCount = await resetPresunti.mutateAsync({
+        sezioneId,
+        elezioneId: selectedElezioneId,
+      });
+      push(`Voti presunti azzerati (${deletedCount} righe)`, { type: 'success' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const pretty = /42501|admin role required|permission|policy/i.test(msg)
+        ? 'Non autorizzato'
+        : msg;
+      push(`Errore azzeramento: ${pretty}`, { type: 'error' });
+    } finally {
+      setConfirmReset(false);
+    }
+  };
+
   if (loadingSez || !sezione) return <Skeleton className="h-40" />;
 
   const candidatiByLista = new Map<string, CandidatoRow[]>();
@@ -114,6 +147,18 @@ export function PresuntoSezionePage() {
       <PageHeader
         title={`Sezione ${sezione.numero}`}
         subtitle={sezione.indirizzo ?? ''}
+        actions={
+          isAdmin ? (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setConfirmReset(true)}
+              disabled={resetPresunti.isPending || !selectedElezioneId}
+            >
+              {resetPresunti.isPending ? 'Azzeramento…' : 'Azzera sezione'}
+            </Button>
+          ) : undefined
+        }
       />
       <Link to="/admin/presunti" className="text-sm text-neon-cyan hover:underline">
         ← Torna all'elenco
@@ -161,6 +206,16 @@ export function PresuntoSezionePage() {
           ))
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmReset}
+        onCancel={() => setConfirmReset(false)}
+        onConfirm={() => void handleResetPresunti()}
+        title="Azzera sezione"
+        message={`Azzerare i voti presunti per la sezione N. ${sezione.numero} dell'elezione «${selectedElezione?.nome ?? ''}»? Verranno cancellate tutte le righe presunte per questa sezione relative ai candidati di questa elezione. I totali globali dei candidati restano invariati. L'operazione è irreversibile.`}
+        confirmLabel={resetPresunti.isPending ? 'Azzeramento…' : 'Azzera'}
+        danger
+      />
     </div>
   );
 }

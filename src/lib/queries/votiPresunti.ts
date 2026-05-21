@@ -176,3 +176,26 @@ export function useDeleteVotoPresunto() {
     onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
   });
 }
+
+/**
+ * Admin-only: azzera tutti i voti presunti di una sezione relativi ai candidati
+ * di una specifica elezione. Non tocca i totali globali (sezione_id IS NULL).
+ * Ritorna il numero di righe cancellate.
+ */
+export function useResetVotiPresuntiSezioneElezione() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      sezioneId: string;
+      elezioneId: string;
+    }): Promise<number> => {
+      const { data, error } = await db.rpc(
+        'reset_voti_presunti_sezione_elezione',
+        { p_sezione_id: input.sezioneId, p_elezione_id: input.elezioneId },
+      );
+      if (error) throw error;
+      return (data ?? 0) as number;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: [KEY] }),
+  });
+}

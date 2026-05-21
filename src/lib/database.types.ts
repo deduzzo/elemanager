@@ -283,6 +283,14 @@ export type Database = {
       auth_role: { Args: Record<string, never>; Returns: string };
       is_admin: { Args: Record<string, never>; Returns: boolean };
       giornata_is_open: { Args: { p_giornata_id: string }; Returns: boolean };
+      reset_voti_effettivi_sezione_elezione: {
+        Args: { p_sezione_id: string; p_elezione_id: string };
+        Returns: string[];
+      };
+      reset_voti_presunti_sezione_elezione: {
+        Args: { p_sezione_id: string; p_elezione_id: string };
+        Returns: number;
+      };
     };
     Enums: Record<string, never>;
   };

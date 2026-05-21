@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, ConfirmDialog, Input, Modal, useToast } from '@/components/ui';
 import { useAuth } from '@/features/auth/useAuth';
+import { useRole } from '@/features/auth/useRole';
 import {
   useRisultatoPerSezioneElezione,
   useUpsertRisultato,
+  useResetVotiEffettiviSezioneElezione,
 } from '@/lib/queries/risultati';
 import { useListeByElezione } from '@/lib/queries/liste';
 import { useCandidatiByLista } from '@/lib/queries/candidati';
@@ -178,6 +180,8 @@ interface Props {
 
 export function ElezioneVoteTab({ sezione, elezione }: Props) {
   const { user } = useAuth();
+  const { data: profile } = useRole();
+  const isAdmin = profile?.ruolo === 'admin';
   const { push: toast } = useToast();
 
   const autosaveKey = `${sezione.id}-${elezione.id}`;
@@ -193,6 +197,7 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
   const upsertRisultato = useUpsertRisultato();
   const upsertVotiLista = useUpsertVotiLista();
   const upsertPreferenze = useUpsertPreferenze();
+  const resetEffettivi = useResetVotiEffettiviSezioneElezione();
 
   const [state, setState] = useState<FormState>(() => emptyState());
   const [hydrated, setHydrated] = useState(false);
@@ -201,6 +206,7 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
   const restorePayloadRef = useRef<FormState | null>(null);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   // Hydrate from server once loaded (and not dirty).
   useEffect(() => {
@@ -382,12 +388,37 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
     }
   };
 
+  const handleResetEffettivi = async () => {
+    try {
+      const { deletedPhotos } = await resetEffettivi.mutateAsync({
+        sezioneId: sezione.id,
+        elezioneId: elezione.id,
+        giornataId: sezione.giornata_id,
+      });
+      clearAutosave(autosaveKey);
+      setDirty(false);
+      setHydrated(false);
+      setState(emptyState());
+      const photoSuffix = deletedPhotos > 0 ? ` (${deletedPhotos} foto)` : '';
+      toast(`Sezione azzerata${photoSuffix}`, { type: 'success' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const pretty = /42501|admin role required|permission|policy/i.test(msg)
+        ? 'Non autorizzato'
+        : msg;
+      toast(`Errore azzeramento: ${pretty}`, { type: 'error' });
+    } finally {
+      setConfirmReset(false);
+    }
+  };
+
   const sortedListe = useMemo(
     () => (liste ? [...liste].sort((a, b) => a.ordine - b.ordine) : []),
     [liste],
   );
 
   const disabledSubmit = saving || hasNegative;
+  const resetting = resetEffettivi.isPending;
 
   return (
     <div className="space-y-4 pb-24">
@@ -472,6 +503,17 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
 
       {/* Sticky bottom bar */}
       <div className="sticky bottom-0 glass border-t border-white/10 p-3 flex gap-2 -mx-4 px-4">
+        {isAdmin && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => setConfirmReset(true)}
+            disabled={resetting || saving}
+            className="mr-auto"
+          >
+            {resetting ? 'Azzeramento…' : 'Azzera sezione'}
+          </Button>
+        )}
         <Button
           variant="ghost"
           onClick={() => void save('draft')}
@@ -520,6 +562,17 @@ export function ElezioneVoteTab({ sezione, elezione }: Props) {
         title="Invia sezione"
         message="Confermi l'invio della sezione? Potrà essere modificata solo da un admin o verificatore."
         confirmLabel="Invia"
+      />
+
+      {/* Confirm azzeramento (admin) */}
+      <ConfirmDialog
+        open={confirmReset}
+        onCancel={() => setConfirmReset(false)}
+        onConfirm={() => void handleResetEffettivi()}
+        title="Azzera sezione"
+        message={`Azzerare l'inserimento per la sezione N. ${sezione.numero} dell'elezione «${elezione.nome}»? Verranno cancellati risultati, voti per lista, preferenze e foto caricate per questa sezione e questa elezione. L'operazione è irreversibile.`}
+        confirmLabel={resetting ? 'Azzeramento…' : 'Azzera'}
+        danger
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { db } from './_db';
+import { supabase } from '@/lib/supabase';
 import type {
   RisultatoSezioneRow,
   RisultatoSezioneInsert,
@@ -83,6 +84,48 @@ export function useUpsertRisultato() {
     onSuccess: (row) => {
       qc.invalidateQueries({ queryKey: [KEY] });
       qc.invalidateQueries({ queryKey: [KEY, row.sezione_id, row.elezione_id] });
+    },
+  });
+}
+
+/**
+ * Admin-only: azzera tutti i dati di scrutinio per (sezione, elezione).
+ * Cancella risultato_sezione (cascade su voti_lista, preferenze_candidato),
+ * le righe foto_sezione e i corrispondenti file dal bucket Storage
+ * 'sezioni-photos'. La pulizia Storage è best-effort: se fallisce, i metadati
+ * DB sono comunque consistenti e non rompiamo la mutation.
+ */
+export function useResetVotiEffettiviSezioneElezione() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      sezioneId: string;
+      elezioneId: string;
+      giornataId: string;
+    }): Promise<{ deletedPhotos: number }> => {
+      const { data, error } = await db.rpc(
+        'reset_voti_effettivi_sezione_elezione',
+        { p_sezione_id: input.sezioneId, p_elezione_id: input.elezioneId },
+      );
+      if (error) throw error;
+      const paths = (data ?? []) as string[];
+      if (paths.length > 0) {
+        const { error: storageErr } = await supabase.storage
+          .from('sezioni-photos')
+          .remove(paths);
+        if (storageErr) {
+          // Non-fatal: metadati già cancellati. Logghiamo per diagnostica.
+          console.error('Storage cleanup failed:', storageErr);
+        }
+      }
+      return { deletedPhotos: paths.length };
+    },
+    onSuccess: (_data, input) => {
+      qc.invalidateQueries({ queryKey: [KEY, input.sezioneId, input.elezioneId] });
+      qc.invalidateQueries({ queryKey: [KEY, 'giornata', input.giornataId] });
+      qc.invalidateQueries({ queryKey: ['voti-lista'] });
+      qc.invalidateQueries({ queryKey: ['preferenze'] });
+      qc.invalidateQueries({ queryKey: ['foto', input.sezioneId] });
     },
   });
 }
