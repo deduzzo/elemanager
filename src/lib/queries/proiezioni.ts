@@ -89,31 +89,33 @@ export function useProiezioniData(
     },
   });
 
-  const rsIds = (risultatiQ.data ?? []).map((r) => r.id);
-
+  // voti_lista / preferenze dell'intera elezione via FK embedding sul parent
+  // risultati_sezione. NON usare .in(rsIds) con tutte le sezioni: 250+ id
+  // producono un URL multi-KB che il proxy davanti a Supabase rifiuta
+  // (502/404 → errore CORS in console).
   const votiQ = useQuery({
-    queryKey: ['proiezioni', elezioneId, 'vl', rsIds.join(',')],
-    enabled: enabled && rsIds.length > 0,
+    queryKey: ['proiezioni', elezioneId, 'vl'],
+    enabled,
     queryFn: async (): Promise<VotoListaRow[]> => {
       const { data, error } = await db
         .from('voti_lista')
-        .select('*')
-        .in('risultato_sezione_id', rsIds);
+        .select('*, risultati_sezione!inner(elezione_id)')
+        .eq('risultati_sezione.elezione_id', elezioneId as string);
       if (error) throw error;
-      return (data ?? []) as VotoListaRow[];
+      return (data ?? []) as unknown as VotoListaRow[];
     },
   });
 
   const prefQ = useQuery({
-    queryKey: ['proiezioni', elezioneId, 'pc', rsIds.join(',')],
-    enabled: enabled && rsIds.length > 0,
+    queryKey: ['proiezioni', elezioneId, 'pc'],
+    enabled,
     queryFn: async (): Promise<PreferenzaCandidatoRow[]> => {
       const { data, error } = await db
         .from('preferenze_candidato')
-        .select('*')
-        .in('risultato_sezione_id', rsIds);
+        .select('*, risultati_sezione!inner(elezione_id)')
+        .eq('risultati_sezione.elezione_id', elezioneId as string);
       if (error) throw error;
-      return (data ?? []) as PreferenzaCandidatoRow[];
+      return (data ?? []) as unknown as PreferenzaCandidatoRow[];
     },
   });
 

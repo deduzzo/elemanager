@@ -55,22 +55,25 @@ function useRisultatiByElezione(elezioneId: string | undefined) {
   });
 }
 
-function usePreferenzeByRs(rsIds: string[]) {
+// Preferenze dell'intera elezione via FK embedding sul parent risultati_sezione.
+// NON usare .in(rsIds) con tutte le sezioni: 250+ id producono un URL multi-KB
+// che il proxy davanti a Supabase rifiuta (502/404 → errore CORS in console).
+function usePreferenzeByElezione(elezioneId: string | undefined) {
   useRealtimeTable({
     table: 'preferenze_candidato',
-    invalidate: [['preferenze_by_rs', rsIds.join(',')]],
-    enabled: rsIds.length > 0,
+    invalidate: [['preferenze_by_elezione', elezioneId]],
+    enabled: !!elezioneId,
   });
   return useQuery({
-    queryKey: ['preferenze_by_rs', rsIds.join(',')],
-    enabled: rsIds.length > 0,
+    queryKey: ['preferenze_by_elezione', elezioneId],
+    enabled: !!elezioneId,
     queryFn: async (): Promise<PreferenzaCandidatoRow[]> => {
       const { data, error } = await db
         .from('preferenze_candidato')
-        .select('*')
-        .in('risultato_sezione_id', rsIds);
+        .select('*, risultati_sezione!inner(elezione_id)')
+        .eq('risultati_sezione.elezione_id', elezioneId as string);
       if (error) throw error;
-      return (data ?? []) as PreferenzaCandidatoRow[];
+      return (data ?? []) as unknown as PreferenzaCandidatoRow[];
     },
   });
 }
@@ -89,9 +92,7 @@ export function PerCandidatoView({
   const candidati = useCandidatiByListe(liste.map((l) => l.id));
   const { data: presunti = [] } = useVotiPresuntiByElezione(elezioneId);
   const { data: risultati = [], isLoading: lr } = useRisultatiByElezione(elezioneId);
-  const { data: preferenze = [], isLoading: lp } = usePreferenzeByRs(
-    risultati.map((r) => r.id)
-  );
+  const { data: preferenze = [], isLoading: lp } = usePreferenzeByElezione(elezioneId);
 
   const rows = useMemo(() => {
     return aggregateByCandidato({
