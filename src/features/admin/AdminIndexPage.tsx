@@ -10,6 +10,7 @@ const cards: Card[] = [
   { to: '/app/admin/presunti', title: 'Voti presunti', description: 'Inserisci stime voti per candidato (totale e per sezione).' },
   { to: '/app/admin/confronto', title: 'Confronto', description: 'Dashboard scostamenti presunti vs reali in tempo reale.' },
   { to: '/app/admin/proiezioni', title: 'Proiezioni', description: 'Stime di risultato basate sullo spoglio in corso.' },
+  { to: '/app/admin/report-sezioni', title: 'Report sezioni', description: 'Elenco stampabile (PDF) di tutte le sezioni con voti di lista e preferiti.' },
   { to: '/app/admin/audit', title: 'Audit log', description: 'Storico modifiche voti e operazioni.' },
 ];
 
