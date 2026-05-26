@@ -38,6 +38,56 @@ export interface ReportSezioneRow {
   preferiti: ReportPreferitoVoto[];
 }
 
+export interface ReportTotali {
+  sezioniInserite: number;
+  sezioniTotali: number;
+  schedeTotali: number;
+  votiLista: ReportListaVoto[];
+  votiListaTot: number;
+  preferiti: ReportPreferitoVoto[];
+  preferitiTot: number;
+}
+
+/**
+ * Aggrega i totali su tutte le sezioni inserite (le `mancante` sono escluse):
+ * voti per ogni lista, voti per ogni candidato preferito, schede e conteggio
+ * sezioni. L'ordine di liste/preferiti rispecchia quello delle righe.
+ */
+export function computeReportTotali(rows: ReportSezioneRow[]): ReportTotali {
+  const votiListaMap = new Map<string, ReportListaVoto>();
+  const preferitiMap = new Map<string, ReportPreferitoVoto>();
+  let schedeTotali = 0;
+  let sezioniInserite = 0;
+
+  for (const r of rows) {
+    if (r.mancante) continue;
+    sezioniInserite++;
+    schedeTotali += r.schedeTotali ?? 0;
+    for (const l of r.votiLista) {
+      const cur = votiListaMap.get(l.lista_id);
+      if (cur) cur.voti += l.voti;
+      else votiListaMap.set(l.lista_id, { ...l });
+    }
+    for (const p of r.preferiti) {
+      const cur = preferitiMap.get(p.candidato_id);
+      if (cur) cur.voti += p.voti;
+      else preferitiMap.set(p.candidato_id, { ...p });
+    }
+  }
+
+  const votiLista = [...votiListaMap.values()];
+  const preferiti = [...preferitiMap.values()];
+  return {
+    sezioniInserite,
+    sezioniTotali: rows.length,
+    schedeTotali,
+    votiLista,
+    votiListaTot: votiLista.reduce((a, b) => a + b.voti, 0),
+    preferiti,
+    preferitiTot: preferiti.reduce((a, b) => a + b.voti, 0),
+  };
+}
+
 /**
  * Costruisce le righe del report per ogni sezione (ordinate per numero).
  *

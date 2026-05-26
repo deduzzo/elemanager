@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildReportSezioni } from './report';
+import { buildReportSezioni, computeReportTotali } from './report';
 import type {
   CandidatoRow,
   ListaRow,
@@ -141,5 +141,59 @@ describe('buildReportSezioni', () => {
       preferenze: [],
     });
     expect(rows.map((r) => r.numero)).toEqual([1, 2, 3]);
+  });
+});
+
+describe('computeReportTotali', () => {
+  const liste = [lista('l1', 'Lista A', 0), lista('l2', 'Lista B', 1)];
+  const candidati = [
+    cand('c1', 'l1', 'Bianchi', true),
+    cand('c3', 'l2', 'Neri', true),
+  ];
+
+  it('somma liste e preferiti sulle sole sezioni inserite', () => {
+    const rows = buildReportSezioni({
+      sezioni: [sez('s1', 1), sez('s2', 2), sez('s3', 3)],
+      liste,
+      candidati,
+      risultatiSezione: [rs('rs1', 's1'), rs('rs2', 's2')], // s3 mancante
+      votiLista: [
+        vl('rs1', 'l1', 40),
+        vl('rs1', 'l2', 10),
+        vl('rs2', 'l1', 5),
+      ],
+      preferenze: [pref('rs1', 'c1', 12), pref('rs2', 'c1', 3), pref('rs2', 'c3', 7)],
+    });
+
+    const t = computeReportTotali(rows);
+    expect(t.sezioniInserite).toBe(2);
+    expect(t.sezioniTotali).toBe(3);
+    expect(t.schedeTotali).toBe(200); // 100 + 100
+    expect(t.votiLista).toEqual([
+      { lista_id: 'l1', nome: 'Lista A', voti: 45 },
+      { lista_id: 'l2', nome: 'Lista B', voti: 10 },
+    ]);
+    expect(t.votiListaTot).toBe(55);
+    expect(t.preferiti.map((p) => [p.candidato_id, p.voti])).toEqual([
+      ['c1', 15],
+      ['c3', 7],
+    ]);
+    expect(t.preferitiTot).toBe(22);
+  });
+
+  it('nessuna sezione inserita → tutto a zero', () => {
+    const rows = buildReportSezioni({
+      sezioni: [sez('s1', 1)],
+      liste,
+      candidati,
+      risultatiSezione: [],
+      votiLista: [],
+      preferenze: [],
+    });
+    const t = computeReportTotali(rows);
+    expect(t.sezioniInserite).toBe(0);
+    expect(t.votiListaTot).toBe(0);
+    expect(t.preferitiTot).toBe(0);
+    expect(t.votiLista).toEqual([]);
   });
 });

@@ -13,7 +13,12 @@ import type {
   RisultatoSezioneRow,
   VotoListaRow,
 } from '@/lib/database.types';
-import { buildReportSezioni, type ReportSezioneRow } from './report';
+import {
+  buildReportSezioni,
+  computeReportTotali,
+  type ReportSezioneRow,
+  type ReportTotali,
+} from './report';
 import './print.css';
 
 const nf = new Intl.NumberFormat('it-IT');
@@ -175,6 +180,61 @@ function SezioneCard({ r }: { r: ReportSezioneRow }) {
   );
 }
 
+function TotaliCard({ t }: { t: ReportTotali }) {
+  return (
+    <div className="report-card glass-strong rounded-2xl p-4 border border-neon-cyan/40">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className="font-semibold text-neon-cyan uppercase tracking-wide">Totali</span>
+        <span className="text-xs text-slate-400">
+          {t.sezioniInserite}/{t.sezioniTotali} sezioni
+          {t.schedeTotali > 0 && ` · ${nf.format(t.schedeTotali)} schede`}
+        </span>
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div className="text-xs uppercase tracking-wide text-slate-400 mb-1 flex justify-between">
+            <span>Voti di lista</span>
+            <span className="font-mono">{nf.format(t.votiListaTot)}</span>
+          </div>
+          <ul className="space-y-0.5 text-sm">
+            {t.votiLista.map((l) => (
+              <li key={l.lista_id} className="flex justify-between gap-3">
+                <span className="text-slate-300 truncate">{l.nome}</span>
+                <span className="font-mono text-slate-100">{nf.format(l.voti)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <div className="text-xs uppercase tracking-wide text-slate-400 mb-1 flex justify-between">
+            <span>
+              <span className="text-amber-300">★</span> Candidati preferiti
+            </span>
+            <span className="font-mono">{nf.format(t.preferitiTot)}</span>
+          </div>
+          {t.preferiti.length === 0 ? (
+            <p className="text-sm text-slate-500">Nessun candidato preferito.</p>
+          ) : (
+            <ul className="space-y-0.5 text-sm">
+              {t.preferiti.map((c) => (
+                <li key={c.candidato_id} className="flex justify-between gap-3">
+                  <span className="text-slate-300 truncate">
+                    {c.cognome} {c.nome}
+                    {c.listaNome && <span className="text-slate-500"> · {c.listaNome}</span>}
+                  </span>
+                  <span className="font-mono text-slate-100">{nf.format(c.voti)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ReportSezioniPage() {
   const { data: giornate = [] } = useGiornate();
   const [giornataId, setGiornataId] = useState<string>('');
@@ -211,7 +271,8 @@ export function ReportSezioniPage() {
     [sezioni, liste, candidati, risultati, votiLista, preferenze],
   );
 
-  const inserite = rows.filter((r) => !r.mancante).length;
+  const totali = useMemo(() => computeReportTotali(rows), [rows]);
+  const inserite = totali.sezioniInserite;
   const elezioneNome = elezioni.find((e) => e.id === selectedElezioneId)?.nome ?? '';
   const loading = ls || lr || lvl || lp;
 
@@ -282,6 +343,7 @@ export function ReportSezioniPage() {
           {rows.map((r) => (
             <SezioneCard key={r.sezione_id} r={r} />
           ))}
+          {inserite > 0 && <TotaliCard t={totali} />}
         </div>
       )}
     </div>
