@@ -63,44 +63,48 @@ function useRisultatiByElezione(elezioneId: string | undefined) {
   });
 }
 
-function useVotiListaByRs(rsIds: string[]) {
-  const key = rsIds.join(',');
+/**
+ * Voti di lista dell'intera elezione, filtrati via FK embedding sul parent
+ * `risultati_sezione`. Una singola richiesta corta: NON usare `.in(rsIds)` con
+ * tutte le sezioni, perché 250+ id producono un URL multi-KB che il proxy
+ * davanti a Supabase rifiuta (414/404 → niente header CORS → errore CORS).
+ */
+function useVotiListaByElezione(elezioneId: string | undefined) {
   useRealtimeTable({
     table: 'voti_lista',
-    invalidate: [['voti_lista_by_rs', key]],
-    enabled: rsIds.length > 0,
+    invalidate: [['voti_lista_by_elezione', elezioneId]],
+    enabled: !!elezioneId,
   });
   return useQuery({
-    queryKey: ['voti_lista_by_rs', key],
-    enabled: rsIds.length > 0,
+    queryKey: ['voti_lista_by_elezione', elezioneId],
+    enabled: !!elezioneId,
     queryFn: async (): Promise<VotoListaRow[]> => {
       const { data, error } = await db
         .from('voti_lista')
-        .select('*')
-        .in('risultato_sezione_id', rsIds);
+        .select('*, risultati_sezione!inner(elezione_id)')
+        .eq('risultati_sezione.elezione_id', elezioneId as string);
       if (error) throw error;
-      return (data ?? []) as VotoListaRow[];
+      return (data ?? []) as unknown as VotoListaRow[];
     },
   });
 }
 
-function usePreferenzeByRs(rsIds: string[]) {
-  const key = rsIds.join(',');
+function usePreferenzeByElezione(elezioneId: string | undefined) {
   useRealtimeTable({
     table: 'preferenze_candidato',
-    invalidate: [['preferenze_by_rs', key]],
-    enabled: rsIds.length > 0,
+    invalidate: [['preferenze_by_elezione', elezioneId]],
+    enabled: !!elezioneId,
   });
   return useQuery({
-    queryKey: ['preferenze_by_rs', key],
-    enabled: rsIds.length > 0,
+    queryKey: ['preferenze_by_elezione', elezioneId],
+    enabled: !!elezioneId,
     queryFn: async (): Promise<PreferenzaCandidatoRow[]> => {
       const { data, error } = await db
         .from('preferenze_candidato')
-        .select('*')
-        .in('risultato_sezione_id', rsIds);
+        .select('*, risultati_sezione!inner(elezione_id)')
+        .eq('risultati_sezione.elezione_id', elezioneId as string);
       if (error) throw error;
-      return (data ?? []) as PreferenzaCandidatoRow[];
+      return (data ?? []) as unknown as PreferenzaCandidatoRow[];
     },
   });
 }
@@ -187,9 +191,12 @@ export function ReportSezioniPage() {
   const { data: risultati = [], isLoading: lr } = useRisultatiByElezione(
     selectedElezioneId || undefined,
   );
-  const rsIds = useMemo(() => risultati.map((r) => r.id), [risultati]);
-  const { data: votiLista = [], isLoading: lvl } = useVotiListaByRs(rsIds);
-  const { data: preferenze = [], isLoading: lp } = usePreferenzeByRs(rsIds);
+  const { data: votiLista = [], isLoading: lvl } = useVotiListaByElezione(
+    selectedElezioneId || undefined,
+  );
+  const { data: preferenze = [], isLoading: lp } = usePreferenzeByElezione(
+    selectedElezioneId || undefined,
+  );
 
   const rows = useMemo(
     () =>
@@ -206,7 +213,7 @@ export function ReportSezioniPage() {
 
   const inserite = rows.filter((r) => !r.mancante).length;
   const elezioneNome = elezioni.find((e) => e.id === selectedElezioneId)?.nome ?? '';
-  const loading = ls || lr || (rsIds.length > 0 && (lvl || lp));
+  const loading = ls || lr || lvl || lp;
 
   return (
     <div className="space-y-4">
